@@ -2,10 +2,10 @@ import numpy as np
 
 class Buffer:
 
-    def __init__(self, sizex, sizey):
-        self.sizex = sizex
+    def __init__(self, sizey, sizex):
         self.sizey = sizey
-        self.buffer = np.zeros((sizex, sizey, 3), dtype=np.uint8)
+        self.sizex = sizex
+        self.buffer = np.zeros((sizey, sizex, 3), dtype=np.uint8)
 
     def clear(self):
         self.buffer[:,:,:] = 0

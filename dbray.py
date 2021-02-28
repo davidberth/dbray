@@ -1,14 +1,17 @@
 import window
 import buffer
-
+import raytracer
 
 screenx, screeny = 600, 600
-buffer = buffer.Buffer(screenx, screeny)
+screen = buffer.Buffer(screenx, screeny)
+window = window.Window(screeny, screenx)
+tracer = raytracer.RayTracer()
 
-window = window.Window(600, 600)
 running = True
 while running:
-    running = window.frame(buffer.buffer)
+    tracer.render(screen)
+    running = window.frame(screen)
+
 
 
 
