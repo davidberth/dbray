@@ -18,7 +18,6 @@ def intersect(O, D, sphere):
     t2 = (-b - np.sqrt(discriminant)) / (2*a)
     return t1, t2
 
-
 class Sphere:
 
     def __init__(self, center, radius):

@@ -4,20 +4,12 @@ import buffer
 import sphere
 
 @jit(nopython=True)
-def intersectObject(x,y,object):
-    distSquared = (x - object[0]) ** 2 + (y - object[1]) ** 2
-    if distSquared < object[3] ** 2:
-        return True
-    return False
-
-@jit(nopython=True)
 def renderScene(sy, sx, buffer, camera, objects, materials):
     numObjects, _ = objects.shape
     t_min = 1.0
     for x in range(0, sx):
         for y in range(0, sy):
             D = np.array([x/sx - 0.5, y/sy - 0.5, 1.0])
-            #color = traceRay(camera, D, 1, np.inf)
 
             closest_t = 9999999999.0
             closest_sphere = -1
@@ -36,11 +28,6 @@ def renderScene(sy, sx, buffer, camera, objects, materials):
             else:
                 buffer[x, y, :] = 0
 
-    #for i in range(sy):
-    #    for j in range(sx):
-    #        for k in range(numObjects):
-    #            if intersectObject(j, i, objects[k, :]):
-    #                buffer[i, j, :] = materials[k, :] * 255.0
 
 class RayTracer:
 
