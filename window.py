@@ -29,6 +29,6 @@ class Window:
         self.screen.blit(surface, (0, 0))
         self.screen.blit(self.updateFPS(), (0, 0))
         pygame.display.flip()
-        self.clock.tick(60)
+        self.clock.tick(30)
 
         return True

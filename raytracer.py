@@ -1,23 +1,56 @@
-import buffer
 import numpy as np
 from numba import jit
+import buffer
+import sphere
 
 @jit(nopython=True)
-def renderScene(sy, sx, buffer, box):
-    for i in range(sy):
-        for j in range(sx):
+def intersectObject(x,y,object):
+    distSquared = (x - object[0]) ** 2 + (y - object[1]) ** 2
+    if distSquared < object[3] ** 2:
+        return True
+    return False
 
-            if box[0] < j < box[1] and box[2] < i < box[3]:
-                buffer[i, j, 0] = box[4]
-                buffer[i, j, 1] = box[5]
-                buffer[i, j, 2] = box[6]
+@jit(nopython=True)
+def renderScene(sy, sx, buffer, camera, objects, materials):
+    numObjects, _ = objects.shape
+    t_min = 1.0
+    for x in range(0, sx):
+        for y in range(0, sy):
+            D = np.array([x/sx - 0.5, y/sy - 0.5, 1.0])
+            #color = traceRay(camera, D, 1, np.inf)
 
+            closest_t = 9999999999.0
+            closest_sphere = -1
+            for k in range(numObjects):
+
+                t1, t2 = sphere.intersect(camera, D, objects[k])
+                if t1 > t_min and t1 < closest_t:
+                    closest_t = t1
+                    closest_sphere = k
+                if t2 > t_min and t2 < closest_t:
+                    closest_t = t2
+                    closest_sphere = k
+
+            if closest_sphere > -1:
+                buffer[x, y, :] = materials[closest_sphere] * 255
+            else:
+                buffer[x, y, :] = 0
+
+    #for i in range(sy):
+    #    for j in range(sx):
+    #        for k in range(numObjects):
+    #            if intersectObject(j, i, objects[k, :]):
+    #                buffer[i, j, :] = materials[k, :] * 255.0
 
 class RayTracer:
 
     def __init__(self):
-        self.boxes = np.array([30, 80, 40, 80, 240, 0, 0])
+        pass
 
-    def render(self, screen):
+    def render(self, screen, scene):
+        objects = scene.getObjectsMatrix()
+        materials = scene.getMaterialsMatrix()
 
-        renderScene(screen.sizey, screen.sizex, screen.buffer, self.boxes)
+        # Place the camera location at the origin
+        camera = np.array([0.0, 0.0, 0.0])
+        renderScene(screen.sizey, screen.sizex, screen.buffer, camera, objects, materials)
