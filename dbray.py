@@ -1,4 +1,4 @@
-import window
+import win
 import buffer
 import raytracer
 import scene
@@ -8,7 +8,7 @@ import material
 screenx, screeny = 600,600
 screen = buffer.Buffer(screenx, screeny)
 scene = scene.Scene()
-window = window.Window(screeny, screenx)
+window = win.Window(screeny, screenx)
 tracer = raytracer.RayTracer()
 
 # Add some objects to the scene
