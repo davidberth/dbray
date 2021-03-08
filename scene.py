@@ -1,5 +1,7 @@
 import sphere
+import material
 import numpy as np
+
 
 class Scene:
 
@@ -33,3 +35,10 @@ class Scene:
             matrix.append(mat.toVector())
         matrix = np.array(matrix)
         return matrix
+
+    def createSampleScene(self):
+
+        # Add some objects to the scene.
+        self.addObject(sphere.Sphere([0.0, 0.0, 2.0], 0.5), material.Material(1.0, 0.0, 0.0))
+        self.addObject(sphere.Sphere([0.0, 0.5, 4.0], 0.6), material.Material(0.0, 1.0, 0.0))
+        self.addObject(sphere.Sphere([0.5, -0.5, 3.0], 0.3), material.Material(0.0, 0.0, 1.0))

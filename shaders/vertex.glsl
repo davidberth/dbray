@@ -1,9 +1,11 @@
 #version 460
 in vec3 in_position;
 in vec2 in_texcoord_0;
-out vec2 uv;
+out vec3 rayDirection;
+
+uniform vec3 cameraPosition;
 
 void main() {
     gl_Position = vec4(in_position, 1.0);
-    uv = in_texcoord_0;
+    rayDirection = vec3(2.0 * in_texcoord_0 - 1.0, -1.0) - cameraPosition;
 }
