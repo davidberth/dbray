@@ -32,4 +32,4 @@ class Sphere:
         self.radius = radius
 
     def toVector(self):
-        return np.array([self.center[0], self.center[1], self.center[2], self.radius])
+        return [[self.center[0], self.center[1], self.center[2]], [self.radius, 0.0, 0.0]]

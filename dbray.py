@@ -4,12 +4,13 @@ import moderngl_window as mglw
 import moderngl as mgl
 import scene
 import numpy as np
+import math
 
 class DBRay(mglw.WindowConfig):
     gl_version = (4, 6)
     aspect_ratio = 1.0
     title = 'DBRay - David Berthiaume'
-    window_size = (600,600)
+    window_size = (1200,1200)
     aspect_ratio = None
     resizable = False
     vsync = True
@@ -29,6 +30,7 @@ class DBRay(mglw.WindowConfig):
 
         self.scene = scene.Scene()
         self.scene.createSampleScene()
+        self.sceneArray = self.scene.getMatrix()
 
         self.wnd.set_icon('resources/icon.png')
         # For rendering a simple textured quad
@@ -36,14 +38,17 @@ class DBRay(mglw.WindowConfig):
         self.fragmentShaderFile = 'shaders/fragment.glsl'
         self.FSProgram = self.load_program(vertex_shader=self.vertexShaderFile,
                                            fragment_shader=self.fragmentShaderFile)
-        self.FSProgram['cameraPosition'].value = (0.0, 0.0, 0.0)
-        self.sceneArray = np.array([[0.0, 0.0, -1.0, 0.25],[0.4, 0.4, -1.0, 0.35],[-1.0, -1.0, -2.0, 0.45]], dtype=np.float32)
-        self.texture = self.ctx.texture((4,3), 1, self.sceneArray.tobytes(), dtype='f4')
+        self.cameraPositionUniform = self.FSProgram['cameraPosition']
+        self.cameraPositionUniform.value = (0.0, 0.0, 0.0)
+        self.FSProgram['numSpheres'] = self.scene.getNumSpheres()
+
+        self.texture = self.ctx.texture([self.sceneArray.shape[2], self.sceneArray.shape[0]], 3, self.sceneArray.tobytes(), dtype='f4')
         self.texture.filter = (mgl.NEAREST, mgl.NEAREST)
-        self.texture.swizzle = 'RRR1'  # What components texelFetch will get from the texture (in shader)
+        #self.texture.swizzle = 'RGB1'  # What components texelFetch will get from the texture (in shader)
         self.quad_fs = geometry.quad_fs()
 
     def render(self, time, frame_time):
+        self.cameraPositionUniform.value = (math.sin(time), 0.0, 0.0)
         self.ctx.clear(0.0, 0.0, 0.0)
         self.texture.use(location=0)
         self.quad_fs.render(self.FSProgram)

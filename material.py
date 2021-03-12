@@ -11,4 +11,4 @@ class Material:
         self.blue = blue
 
     def toVector(self):
-        return np.array([self.red, self.green, self.blue])
+        return [[self.red, self.green, self.blue]]
