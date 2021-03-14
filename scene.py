@@ -1,7 +1,9 @@
 import sphere
+import plane
 import material
 import numpy as np
 import random
+
 
 class Scene:
 
@@ -10,13 +12,13 @@ class Scene:
         self.objects = []
         self.materials = []
 
-    def addObject(self, psphere, pmaterial):
+    def addObject(self, object, pmaterial):
 
-        print (f'adding sphere {psphere.toVector()} with material {pmaterial.toVector()}')
-        self.objects.append(psphere)
+        print (f'adding object {object.toVector()} with material {pmaterial.toVector()}')
+        self.objects.append(object)
         self.materials.append(pmaterial)
 
-    def getNumSpheres(self):
+    def getNumObjects(self):
         return len(self.objects)
 
     def getMatrix(self):
@@ -28,30 +30,13 @@ class Scene:
         matrix = np.array(matrix, dtype=np.float32)
         return matrix
 
-    def getObjectsMatrix(self):
-        #TODO vectorize this!
-        matrix = []
-        for object in self.objects:
-            matrix.append(object.toVector())
-        matrix = np.array(matrix)
-        return matrix
-
-    def getMaterialsMatrix(self):
-        #TODO vectorize this also!
-        matrix = []
-        for mat in self.materials:
-            matrix.append(mat.toVector())
-        matrix = np.array(matrix)
-        return matrix
-
     def createSampleScene(self):
 
         # Add some objects to the scene.
-        #self.addObject(sphere.Sphere([0.0, 3.7, -12.0], 1.5), material.Material(1.0, 0.0, 0.0))
-        #self.addObject(sphere.Sphere([0.1, 0.5, -4.0], 0.2), material.Material(0.0, 1.0, 0.0))
-        #self.addObject(sphere.Sphere([0.5, -0.5, -3.0], 0.3), material.Material(0.0, 0.0, 1.0))
-
-        for i in range(500):
-            self.addObject(sphere.Sphere([random.random() * 10.0 - 5.0, random.random() * 10.0 - 5.0, random.random() * 10.0 - 15.0],
-                                         random.random() * 2.0 + 0.2), material.Material(random.random(), random.random(), random.random()))
-
+        random.seed(42)
+        for i in range(200):
+            self.addObject(sphere.Sphere([random.random() * 10.0 - 5.0, random.random() * 10.0 - 5.0, random.random() * 100.0 - 105.0],
+                                         random.random() * 1.0 + 0.1), material.Material(random.random(), random.random(), random.random()))
+        #self.addObject(sphere.Sphere([0.0, -1504.0, 0.0], 1500.0), material.Material(1.0, 1.0, 1.0))
+        self.addObject(plane.Plane([0.0, -5.0, 0.0], [0.0, 1.0, 0.0]), material.Material(2.0, 2.0, 2.0))
+        #self.addObject(sphere.Sphere([0.0, 1.0, -5.0], 0.5), material.Material(1.0, 1.0, 1.0))
