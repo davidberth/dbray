@@ -19,6 +19,8 @@ class Camera():
         self.moveBackward = False
         self.strafeRight = False
         self.strafeLeft = False
+        self.moveUp = False
+        self.moveDown = False
 
         self.turnSpeed = 0.05
         self.tiltSpeed = 0.025
@@ -34,6 +36,8 @@ class Camera():
         self.moveBackwardKey = keys.S
         self.strafeLeftKey = keys.Q
         self.strafeRightKey = keys.E
+        self.moveUpKey = keys.T
+        self.moveDownKey = keys.G
 
     def getOrthonormal(self):
 
@@ -70,11 +74,17 @@ class Camera():
             self.strafeRight = keySwitch
         if key == self.strafeLeftKey:
             self.strafeLeft = keySwitch
+        if key == self.moveUpKey:
+            self.moveUp = keySwitch
+        if key == self.moveDownKey:
+            self.moveDown = keySwitch
 
 
     def frame(self):
         cameraMoving = self.turnLeft or self.turnRight or self.tiltDown or self.tiltUp or \
-                       self.moveForward or self.moveBackward or self.strafeLeft or self.strafeRight
+                       self.moveForward or self.moveBackward or self.strafeLeft or self.strafeRight or \
+                       self.moveUp or self.moveDown
+
 
         if cameraMoving:
             if self.moveForward:
@@ -85,6 +95,10 @@ class Camera():
                 self.location = self.location + self.orthoRight * self.moveSpeed
             if self.strafeLeft:
                 self.location = self.location - self.orthoRight * self.moveSpeed
+            if self.moveUp:
+                self.location = self.location + self.orthoUp * self.moveSpeed
+            if self.moveDown:
+                self.location = self.location - self.orthoUp * self.moveSpeed
             if self.turnRight:
                 self.yaw -= self.turnSpeed
                 if self.yaw < 0.0:

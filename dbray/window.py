@@ -2,9 +2,10 @@ import os
 from moderngl_window import geometry
 import moderngl_window as mglw
 import moderngl as mgl
-import scene
-import camera
 import math
+from dbray import scene
+from dbray import camera
+
 
 class DBRay(mglw.WindowConfig):
     gl_version = (4, 6)
@@ -15,7 +16,6 @@ class DBRay(mglw.WindowConfig):
     resizable = False
     vsync = True
 
-
     path = os.path.abspath(__file__)
     dirPath = os.path.dirname(os.path.dirname(path))
     resource_dir = os.path.normpath(dirPath)
@@ -24,7 +24,7 @@ class DBRay(mglw.WindowConfig):
 
         super().__init__(**kwargs)
         # Center the window on the screen
-        # TODO find a way to read the screen resolution
+
         atHome = True
         if atHome:
             self.wnd.position = (3640 - self.wnd.size[0]) // 2, (1440 - self.wnd.size[1]) // 2

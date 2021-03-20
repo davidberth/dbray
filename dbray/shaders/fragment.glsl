@@ -28,11 +28,11 @@ float intersectSphere(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 sphereP
     sphereRadius = vec3(sphereRadiusFloat, 0.0, 0.0);
     vec3 oc = cameraPosition - spherePosition;
     float a = dot(rayDirection, rayDirection);
-    float halfb = dot(oc, rayDirection);
+    float b = 2.0 * dot(oc, rayDirection);
     float c = dot(oc, oc) - sphereRadiusFloat*sphereRadiusFloat;
-    float disc =  halfb*halfb - a*c;
+    float disc =  b*b - 4.0*a*c;
     float t = -999.0;
-    if (disc > 0) t =  (-halfb - sqrt(disc) ) / a;
+    if (disc > 0) t =  (-b - sqrt(disc) ) / (2.0 * a);
     return t;
 }
 
@@ -126,15 +126,15 @@ void main() {
 
         vec3 lightDir = normalize(lightPosition - rayHit);
 
-        rayHit+=lightDir * 1.0;
+        //rayHit+=lightDir * 0.0001;
         // Now we cast a ray to determine if the point is in shadow
         for(int i = 0; i < numObjects; i++)
         {
             int geomType = int(texelFetch(Texture, ivec2(0, i), 0).x);
             float distance = -1.0;
-            //if (geomType == 1) distance = intersectPlane(i, rayHit, lightDir, d0, d1);
+            if (geomType == 1) distance = intersectPlane(i, rayHit, lightDir, d0, d1);
             if (geomType == 2) distance = intersectSphere(i, rayHit, lightDir, d0, d1);
-            //if (geomType == 3) distance = intersectTriangle(i, rayHit, lightDir, d0, d1, d2);
+            if (geomType == 3) distance = intersectTriangle(i, rayHit, lightDir, d0, d1, d2);
             if (distance > 0.1) {
                 i = numObjects;// escape from the loop
                 normal = vec3(0.0, 0.0, 0.0);
