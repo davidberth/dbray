@@ -11,7 +11,7 @@ class DBRay(mglw.WindowConfig):
     gl_version = (4, 6)
     aspect_ratio = 1.0
     title = 'DBRay - David Berthiaume'
-    window_size = (800, 700)
+    window_size = (800, 800)
     aspect_ratio = None
     resizable = False
     vsync = True
@@ -37,25 +37,28 @@ class DBRay(mglw.WindowConfig):
         self.sceneArray = self.scene.getMatrix()
 
         self.wnd.set_icon('resources/icon.png')
-        # For rendering a simple textured quad
+        self.camera = camera.Camera(self.wnd.keys)
+        self.initGL()
+
+    def initGL(self):
         self.vertexShaderFile = 'dbray/shaders/vertex.glsl'
         self.fragmentShaderFile = 'dbray/shaders/fragment.glsl'
         self.FSProgram = self.load_program(vertex_shader=self.vertexShaderFile,
                                            fragment_shader=self.fragmentShaderFile)
 
-        self.camera = camera.Camera(self.wnd.keys)
+
         self.cameraPositionUniform = self.FSProgram['cameraPosition']
         self.cameraOrthoForwardUniform = self.FSProgram['cameraForward']
         self.cameraOrthoRightUniform = self.FSProgram['cameraRight']
         self.cameraOrthoUpUniform = self.FSProgram['cameraUp']
 
-        self.cameraPositionUniform.value =tuple(self.camera.location)
+        self.cameraPositionUniform.value = tuple(self.camera.location)
         self.cameraOrthoForwardUniform.value = tuple(self.camera.orthoForward)
         self.cameraOrthoRightUniform.value = tuple(self.camera.orthoRight)
         self.cameraOrthoUpUniform.value = tuple(self.camera.orthoUp)
 
         self.FSProgram['numObjects'] = self.scene.getNumObjects()
-        self.FSProgram['lightPosition'].value = (40.0, 100.0, -200.0)
+        self.FSProgram['lightPosition'].value = (0.0, 50.0, 15.0)
 
         self.texture = self.ctx.texture([self.sceneArray.shape[1], self.sceneArray.shape[0]], 3,
                                         self.sceneArray.tobytes(), dtype='f4')
@@ -64,7 +67,7 @@ class DBRay(mglw.WindowConfig):
 
     def render(self, time, frame_time):
 
-        self.FSProgram['lightPosition'].value = (40.0, 100.0, -200.0 + math.sin(time) * 100.0)
+        self.FSProgram['lightPosition'].value = (math.cos(time) * 100.0, 100.0, -10.0 + math.sin(time) * 100.0)
 
         cameraChange = self.camera.frame()
 
@@ -78,16 +81,7 @@ class DBRay(mglw.WindowConfig):
         self.quad_fs.render(self.FSProgram)
 
     def reloadShaders(self):
-        self.FSProgram = self.load_program(vertex_shader=self.vertexShaderFile,
-                                           fragment_shader=self.fragmentShaderFile)
-        self.cameraPositionUniform = self.FSProgram['cameraPosition']
-        self.cameraPositionUniform.value = (0.0, 0.0, 0.0)
-        self.FSProgram['numSpheres'] = self.scene.getNumSpheres()
-
-        self.texture = self.ctx.texture([self.sceneArray.shape[2], self.sceneArray.shape[0]], 3,
-                                        self.sceneArray.tobytes(), dtype='f4')
-        self.texture.filter = (mgl.NEAREST, mgl.NEAREST)
-        self.quad_fs = geometry.quad_fs()
+        self.initGL()
 
     def key_event(self, key, action, modifiers):
         if action == self.wnd.keys.ACTION_PRESS:

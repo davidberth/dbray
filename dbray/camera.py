@@ -4,7 +4,7 @@ import math
 class Camera():
 
     def __init__(self, keys):
-        self.location = np.array([0.0, 0.0, 0.0], dtype = np.float32)
+        self.location = np.array([0.0, 1.0, 0.0], dtype = np.float32)
         # Face in -z direction
         self.yaw = math.pi / 2.0
         self.pitch = 0.0
@@ -30,10 +30,10 @@ class Camera():
 
         self.turnLeftKey = keys.A
         self.turnRightKey = keys.D
-        self.tiltUpKey = keys.R
-        self.tiltDownKey = keys.F
-        self.moveForwardKey = keys.W
-        self.moveBackwardKey = keys.S
+        self.tiltUpKey = keys.W
+        self.tiltDownKey = keys.S
+        self.moveForwardKey = keys.UP
+        self.moveBackwardKey = keys.DOWN
         self.strafeLeftKey = keys.Q
         self.strafeRightKey = keys.E
         self.moveUpKey = keys.T
