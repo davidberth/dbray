@@ -10,18 +10,18 @@ import math
 from dbray import scene
 from dbray import camera
 
-
 class Window():
 
-    def __init__(self, **kwargs):
+    def __init__(self, title, width, height):
 
         settings.WINDOW['class'] = 'moderngl_window.context.glfw.Window'
         settings.WINDOW['gl_version'] = (4, 6)
-        settings.WINDOW['size'] = (800, 800)
-        settings.WINDOW['aspect_ratio'] = 1.0
-        settings.WINDOW['title'] = 'DBray - David Berthiaume'
+        settings.WINDOW['size'] = (width, height)
+        settings.WINDOW['aspect_ratio'] = width / height
+        settings.WINDOW['title'] = title
         settings.WINDOW['resizable'] = False
         settings.WINDOW['vsync'] = True
+
         path = os.path.abspath(__file__)
         dirPath = os.path.dirname(os.path.dirname(path))
         resources.register_dir(os.path.normpath(dirPath))
@@ -29,20 +29,14 @@ class Window():
         self.wnd = moderngl_window.create_window_from_settings()
         self.ctx = self.wnd.ctx
         self.wnd.key_event_func = self.key_event
-
-        atHome = True
-        if atHome:
-            self.wnd.position = (3640 - self.wnd.size[0]) // 2, (1440 - self.wnd.size[1]) // 2
-        else:
-            # closer to the top of the screen
-            self.wnd.position = (1920 - self.wnd.size[0]) // 2, (1024 - self.wnd.size[1]) // 2
-
-        self.scene = scene.Scene()
-        self.scene.createSampleScene()
-        self.sceneArray = self.scene.getMatrix()
+        self.wnd.position = (3640 - self.wnd.size[0]) // 2, (1440 - self.wnd.size[1]) // 2
 
         self.wnd.set_icon('resources/icon.png')
         self.camera = camera.Camera(self.wnd.keys)
+
+    def setScene(self, scene):
+        self.scene = scene
+        self.sceneArray = self.scene.getMatrix()
         self.initGL()
 
     def initGL(self):
@@ -114,9 +108,6 @@ class Window():
 
         self.wnd.destroy()
 
-if __name__ == '__main__':
-    win = Window()
-    win.run()
 
 
 
