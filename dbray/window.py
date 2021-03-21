@@ -1,29 +1,34 @@
 import os
 from moderngl_window import geometry
-import moderngl_window as mglw
+import moderngl_window
+from moderngl_window.conf import settings
+from moderngl_window.timers.clock import Timer
+from moderngl_window import resources
+from moderngl_window.meta import ProgramDescription
 import moderngl as mgl
 import math
 from dbray import scene
 from dbray import camera
 
 
-class DBRay(mglw.WindowConfig):
-    gl_version = (4, 6)
-    aspect_ratio = 1.0
-    title = 'DBRay - David Berthiaume'
-    window_size = (800, 800)
-    aspect_ratio = None
-    resizable = False
-    vsync = True
-
-    path = os.path.abspath(__file__)
-    dirPath = os.path.dirname(os.path.dirname(path))
-    resource_dir = os.path.normpath(dirPath)
+class Window():
 
     def __init__(self, **kwargs):
 
-        super().__init__(**kwargs)
-        # Center the window on the screen
+        settings.WINDOW['class'] = 'moderngl_window.context.glfw.Window'
+        settings.WINDOW['gl_version'] = (4, 6)
+        settings.WINDOW['size'] = (800, 800)
+        settings.WINDOW['aspect_ratio'] = 1.0
+        settings.WINDOW['title'] = 'DBray - David Berthiaume'
+        settings.WINDOW['resizable'] = False
+        settings.WINDOW['vsync'] = True
+        path = os.path.abspath(__file__)
+        dirPath = os.path.dirname(os.path.dirname(path))
+        resources.register_dir(os.path.normpath(dirPath))
+
+        self.wnd = moderngl_window.create_window_from_settings()
+        self.ctx = self.wnd.ctx
+        self.wnd.key_event_func = self.key_event
 
         atHome = True
         if atHome:
@@ -43,9 +48,13 @@ class DBRay(mglw.WindowConfig):
     def initGL(self):
         self.vertexShaderFile = 'dbray/shaders/vertex.glsl'
         self.fragmentShaderFile = 'dbray/shaders/fragment.glsl'
-        self.FSProgram = self.load_program(vertex_shader=self.vertexShaderFile,
-                                           fragment_shader=self.fragmentShaderFile)
 
+        self.FSProgram = resources.programs.load(
+            ProgramDescription(
+                vertex_shader=self.vertexShaderFile,
+                fragment_shader=self.fragmentShaderFile,
+            )
+        )
 
         self.cameraPositionUniform = self.FSProgram['cameraPosition']
         self.cameraOrthoForwardUniform = self.FSProgram['cameraForward']
@@ -93,12 +102,21 @@ class DBRay(mglw.WindowConfig):
             self.camera.processKeyEvent(key, action, self.wnd.keys)
 
 
-    @classmethod
-    def run(cls):
-        mglw.run_window_config(cls)
+    def run(self):
+        timer = Timer()
+        timer.start()
+
+        while not self.wnd.is_closing:
+            self.wnd.clear()
+            time, frame_time = timer.next_frame()
+            self.render(time, frame_time)
+            self.wnd.swap_buffers()
+
+        self.wnd.destroy()
 
 if __name__ == '__main__':
-    DBRay.run()
+    win = Window()
+    win.run()
 
 
 

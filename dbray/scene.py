@@ -16,7 +16,7 @@ class Scene:
 
     def addObject(self, object, pmaterial):
 
-        print (f'adding object {object.toVector()} with material {pmaterial.toVector()}')
+        #print (f'adding object {object.toVector()} with material {pmaterial.toVector()}')
         self.objects.append(object)
         self.materials.append(pmaterial)
 
