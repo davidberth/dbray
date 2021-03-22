@@ -39,6 +39,28 @@ class Camera():
         self.moveUpKey = keys.T
         self.moveDownKey = keys.G
 
+    def setPosition(self, pos):
+        self.location = np.array(pos)
+
+    def setLookAt(self, lookAt):
+
+        direction = np.array(lookAt) - self.location
+        direction/= np.linalg.norm(direction)
+        print (direction)
+        self.pitch = math.asin(-direction[1]) - math.pi / 2.0
+        self.yaw = math.atan2(direction[0], direction[2]) - math.pi / 2.0
+
+        if self.yaw < 0.0:
+            self.yaw += self.twopi
+        if self.yaw > self.twopi:
+            self.yaw -= self.twopi
+        if self.pitch > math.pi - 0.01:
+            self.pitch = math.pi - 0.01
+        if self.pitch < -math.pi + 0.01:
+            self.pitch = -math.pi + 0.01
+
+        self.getOrthonormal()
+
     def getOrthonormal(self):
 
         # Construct an orthonormal basis to use for ray generation
@@ -84,7 +106,6 @@ class Camera():
         cameraMoving = self.turnLeft or self.turnRight or self.tiltDown or self.tiltUp or \
                        self.moveForward or self.moveBackward or self.strafeLeft or self.strafeRight or \
                        self.moveUp or self.moveDown
-
 
         if cameraMoving:
             if self.moveForward:
