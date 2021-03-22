@@ -19,9 +19,8 @@ for i in range(10):
     scene.addObject(Triangle([x, 5.0, -12.0], [x+2.0, 7.0, -12.0], [x+1.0, 9.0, -13.0]), mat)
 
 scene.addObject(Plane([0.0, 0.0, 0.0], [0.0, 1.0, 0.0]), Material(1.0, 1.0, 1.0))
-win.camera.setPosition((0.0, 10.0, 5.0))
-win.camera.setLookAt((0.0, 0.0, 0.0))
-
+win.camera.setPosition((0.0, 10.0, 15.0))
+win.camera.setLookAt((0.0, 3.0, -3.0))
 
 win.setScene(scene)
 win.run()

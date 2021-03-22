@@ -47,7 +47,7 @@ class Camera():
         direction = np.array(lookAt) - self.location
         direction/= np.linalg.norm(direction)
         print (direction)
-        self.pitch = math.asin(-direction[1]) - math.pi / 2.0
+        self.pitch = math.asin(direction[1])
         self.yaw = math.atan2(direction[0], direction[2]) - math.pi / 2.0
 
         if self.yaw < 0.0:
