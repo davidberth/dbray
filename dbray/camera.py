@@ -36,8 +36,8 @@ class Camera():
         self.moveBackwardKey = keys.DOWN
         self.strafeLeftKey = keys.Q
         self.strafeRightKey = keys.E
-        self.moveUpKey = keys.T
-        self.moveDownKey = keys.G
+        self.moveUpKey = keys.R
+        self.moveDownKey = keys.F
 
     def setPosition(self, pos):
         self.location = np.array(pos)

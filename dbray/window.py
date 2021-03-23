@@ -29,6 +29,8 @@ class Window():
         self.wnd = moderngl_window.create_window_from_settings()
         self.ctx = self.wnd.ctx
         self.wnd.key_event_func = self.key_event
+        self.wnd.mouse_press_event_func = self.mouse_press_event
+        self.wnd.mouse_release_event_func = self.mouse_release_event
         self.wnd.position = (3640 - self.wnd.size[0]) // 2, (1440 - self.wnd.size[1]) // 2
 
         self.wnd.set_icon('resources/icon.png')
@@ -85,6 +87,20 @@ class Window():
 
     def reloadShaders(self):
         self.initGL()
+
+    def mouse_press_event(self, x, y, button):
+        print (button)
+        if button == 1:
+            self.camera.moveForward = True
+        else:
+            self.camera.moveBackward = True
+
+    def mouse_release_event(self, x, y, button):
+        if button == 1:
+            self.camera.moveForward = False
+        else:
+            self.camera.moveBackward = False
+
 
     def key_event(self, key, action, modifiers):
         if action == self.wnd.keys.ACTION_PRESS:

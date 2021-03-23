@@ -28,11 +28,11 @@ float intersectSphere(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 sphereP
     sphereRadius = vec3(sphereRadiusFloat, 0.0, 0.0);
     vec3 oc = rayOrigin - spherePosition;
     float a = dot(rayDirection, rayDirection);
-    float b = 2.0 * dot(oc, rayDirection);
+    float halfb = dot(oc, rayDirection);
     float c = dot(oc, oc) - sphereRadiusFloat*sphereRadiusFloat;
-    float disc =  b*b - 4.0*a*c;
+    float disc =  halfb*halfb - a*c;
     float t = -999.0;
-    if (disc > 0.0) t =  (-b - sqrt(disc) ) / (2.0 * a);
+    if (disc > 0.0) t =  (-halfb - sqrt(disc) ) / a;
     return t;
 }
 
