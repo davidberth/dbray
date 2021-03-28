@@ -32,6 +32,8 @@ class Window():
         self.wnd.mouse_press_event_func = self.mouse_press_event
         self.wnd.mouse_release_event_func = self.mouse_release_event
         self.wnd.position = (3640 - self.wnd.size[0]) // 2, (1440 - self.wnd.size[1]) // 2
+        self.height = height
+        self.width = width
 
         self.wnd.set_icon('resources/icon.png')
         self.camera = camera.Camera(self.wnd.keys)
@@ -64,7 +66,16 @@ class Window():
 
         self.FSProgram['numObjects'] = self.scene.getNumObjects()
         self.FSProgram['lightPosition'].value = (0.0, 50.0, 15.0)
-        #self.FSProgram['numSamples'].value = 5
+        ysampInc =1.0 / self.height
+        xsampInc = 1.0 / self.width
+        samples = []
+        numSamples = 4
+        numSample1 = int(math.sqrt(numSamples) + 0.1)
+        for x in range(numSample1):
+            for y in range(numSample1):
+                samples.append( ( (x/numSample1) * xsampInc, (y/numSample1) * ysampInc ))
+
+        self.FSProgram['samples'].value = samples
 
         self.texture = self.ctx.texture([self.sceneArray.shape[1], self.sceneArray.shape[0]], 3,
                                         self.sceneArray.tobytes(), dtype='f4')

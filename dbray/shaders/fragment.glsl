@@ -6,7 +6,9 @@ uniform sampler2D Texture;
 uniform vec3 cameraPosition;
 uniform vec3 lightPosition;
 uniform int numObjects;
-uniform vec2 numSamples;
+uniform vec3 cameraRight;
+uniform vec3 cameraUp;
+uniform vec2 samples[4];
 
 vec3 getBackColor(vec3 rayDirection) {
     float t = (-rayDirection.y + 0.5);
@@ -111,9 +113,20 @@ void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, out flo
 
 }
 
+vec3 getNormal(in int closestGeometryType, in vec3 location, in vec3 d0, in vec3 d1, in vec3 d2)
+{
+    vec3 normal;
+    if (closestGeometryType == 1) normal = getPlaneNormal(location, d0, d1);
+    if (closestGeometryType == 2) normal = getSphereNormal(location, d0, d1);
+    if (closestGeometryType == 3) normal = getTriangleNormal(location, d0, d1, d2);
+    return normal;
+}
+
+
 void main() {
+    vec3 lcolor;
     vec3 color;
-    vec3 rayDirectionNorm = normalize(rayDestination - cameraPosition);
+
 
     float minDistance;
     int objectHitIndex;
@@ -121,39 +134,49 @@ void main() {
     vec3 closestd0;
     vec3 closestd1;
     vec3 closestd2;
-    castRay(cameraPosition, rayDirectionNorm, false, minDistance, objectHitIndex, closestGeometryType,
+    int numSamples = samples.length();
+
+    color = vec3(0.0, 0.0, 0.0);
+    for (int samp = 0; samp < numSamples; ++samp)
+    {
+        // cast the main ray
+        vec3 rayDestinationSamp = rayDestination + samples[samp][0] * cameraRight + samples[samp][1] * cameraUp;
+        vec3 rayDirectionSamp = normalize(rayDestinationSamp - cameraPosition);
+
+        castRay(cameraPosition, rayDirectionSamp,
+                false, minDistance, objectHitIndex, closestGeometryType,
+        closestd0, closestd1, closestd2);
+
+        if (objectHitIndex >= 0)
+        {
+            vec3 rayHit = cameraPosition + minDistance * rayDirectionSamp;
+            lcolor = vec3(texelFetch(Texture, ivec2(5, objectHitIndex), 0));
+            // get the normal of the surface
+            vec3 normal = getNormal(closestGeometryType, rayHit, closestd0, closestd1, closestd2);
+            vec3 lightDir = normalize(lightPosition - rayHit);
+
+            rayHit+=lightDir * 0.01;
+            // Now we cast a ray to determine if the point is in shadow
+            castRay(rayHit, lightDir, true, minDistance, objectHitIndex, closestGeometryType,
             closestd0, closestd1, closestd2);
 
-    if (objectHitIndex >= 0)
-    {
-        vec3 rayHit = cameraPosition + minDistance * rayDirectionNorm;
-        color = vec3(texelFetch(Texture, ivec2(5, objectHitIndex), 0));
-        // get the normal of the surface
-        vec3 normal;
-
-        if (closestGeometryType == 1) normal = getPlaneNormal(rayHit, closestd0, closestd1);
-        if (closestGeometryType == 2) normal = getSphereNormal(rayHit, closestd0, closestd1);
-        if (closestGeometryType == 3) normal = getTriangleNormal(rayHit, closestd0, closestd1, closestd2);
-
-        vec3 lightDir = normalize(lightPosition - rayHit);
-
-        rayHit+=lightDir * 0.01;
-        // Now we cast a ray to determine if the point is in shadow
-        castRay(rayHit, lightDir, true, minDistance, objectHitIndex, closestGeometryType,
-                closestd0, closestd1, closestd2);
-
-        if (objectHitIndex < 0)
-        {
-            color = color * max(dot(normal, lightDir), 0.05);
+            if (objectHitIndex < 0)
+            {
+                lcolor = lcolor * max(dot(normal, lightDir), 0.05);
+            }
+            else
+            {
+                lcolor = vec3(0.05, 0.05, 0.05);
+            }
         }
         else
         {
-            color = vec3(0.05, 0.05, 0.05);
+            lcolor = getBackColor(rayDirectionSamp);
         }
+
+        color+=lcolor;
     }
-    else
-    {
-        color = getBackColor(rayDirectionNorm);
-    }
+
+    color/=float(numSamples);
     fragColor = vec4(color, 1.0);
 }
