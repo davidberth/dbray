@@ -17,8 +17,7 @@ for i in range(10):
     x = i * 5.0 - 25.0
     mat = Material(random.random(), random.random(), random.random())
     scene.addObject(Sphere([x, 5.0, -8.0], i/5.0 + 0.5), mat)
-    scene.addObject(Triangle([x, 5.0, -12.0], [x+2.0, 7.0, -12.0], [x+1.0, 9.0, -13.0]), mat)
-
+    scene.addObject(Triangle([x, 5.0, -12.0], [x+2.0, 6.0, -17.0], [x+1.0, 14.0, -18.0]), mat)
 
 
 scene.addObject(Plane([0.0, 0.0, 0.0], [0.0, 1.0, 0.0]), Material(1.0, 1.0, 1.0))

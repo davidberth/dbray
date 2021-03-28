@@ -6,7 +6,7 @@ uniform sampler2D Texture;
 uniform vec3 cameraPosition;
 uniform vec3 lightPosition;
 uniform int numObjects;
-
+uniform vec2 numSamples;
 
 vec3 getBackColor(vec3 rayDirection) {
     float t = (-rayDirection.y + 0.5);
@@ -79,16 +79,15 @@ vec3 getTriangleNormal(vec3 hitPos, vec3 d0, vec3 d1, vec3 d2)
     return normalize(cross(d2-d0, d1-d0));
 }
 
-void main() {
-    vec3 color;
-    vec3 rayDirectionNorm = normalize(rayDestination - cameraPosition);
-
-    float minDistance = 99999999.0;
-    int objectHitIndex = -1;
-    int closestGeometryType = -1;
-    vec3 closestd0;
-    vec3 closestd1;
-    vec3 closestd2;
+void castRay(in vec3 rayOrigin, in vec3 rayDirection, out float minDistance, out int objectHitIndex,
+             out int closestGeometryType, out vec3 closestd0, out vec3 closestd1, out vec3 closestd2)
+{
+    minDistance = 99999999.0;
+    objectHitIndex = -1;
+    closestGeometryType = -1;
+    //vec3 closestd0;
+    //vec3 closestd1;
+    //vec3 closestd2;
     // These will hold the general properties of the nearest intersection
     vec3 d0;
     vec3 d1;
@@ -97,9 +96,9 @@ void main() {
     {
         int geomType = int(texelFetch(Texture, ivec2(0, i), 0).x);
         float distance = -1.0;
-        if (geomType == 1) distance = intersectPlane(i, cameraPosition, rayDirectionNorm, d0, d1);
-        if (geomType == 2) distance = intersectSphere(i, cameraPosition, rayDirectionNorm, d0, d1);
-        if (geomType == 3) distance = intersectTriangle(i, cameraPosition, rayDirectionNorm, d0, d1, d2);
+        if (geomType == 1) distance = intersectPlane(i, rayOrigin, rayDirection, d0, d1);
+        if (geomType == 2) distance = intersectSphere(i, rayOrigin, rayDirection, d0, d1);
+        if (geomType == 3) distance = intersectTriangle(i, rayOrigin, rayDirection, d0, d1, d2);
 
         if (distance > 0.5 && distance < minDistance)
         {
@@ -111,6 +110,21 @@ void main() {
             closestd2 = d2;
         }
     }
+
+}
+
+void main() {
+    vec3 color;
+    vec3 rayDirectionNorm = normalize(rayDestination - cameraPosition);
+
+    float minDistance;
+    int objectHitIndex;
+    int closestGeometryType;
+    vec3 closestd0;
+    vec3 closestd1;
+    vec3 closestd2;
+    castRay(cameraPosition, rayDirectionNorm, minDistance, objectHitIndex, closestGeometryType,
+            closestd0, closestd1, closestd2);
 
     if (objectHitIndex >= 0)
     {
@@ -125,29 +139,18 @@ void main() {
 
         vec3 lightDir = normalize(lightPosition - rayHit);
 
-        rayHit+=lightDir * 0.1;
+        rayHit+=lightDir * 0.01;
         // Now we cast a ray to determine if the point is in shadow
-        bool inShadow = false;
-        for(int j = 0; j < numObjects; j++)
-        {
-            int geomType = int(texelFetch(Texture, ivec2(0, j), 0).x);
-            float distance = -1.0;
-            //if (geomType == 1) distance = intersectPlane(j, rayHit, lightDir, d0, d1);
-            if (geomType == 2) distance = intersectSphere(j, rayHit, lightDir, d0, d1);
-            if (geomType == 3) distance = intersectTriangle(j, rayHit, lightDir, d0, d1, d2);
-            if (distance > 0.1) {
-                j = numObjects;// escape from the loop
-                inShadow = true;
-            }
-        }
+        castRay(rayHit, lightDir, minDistance, objectHitIndex, closestGeometryType,
+                closestd0, closestd1, closestd2);
 
-        if (!inShadow)
+        if (objectHitIndex < 0)
         {
-            color = color * max(dot(normal, lightDir), 0.1);
+            color = color * max(dot(normal, lightDir), 0.05);
         }
         else
         {
-            color = vec3(0.1, 0.1, 0.1);
+            color = vec3(0.05, 0.05, 0.05);
         }
     }
     else

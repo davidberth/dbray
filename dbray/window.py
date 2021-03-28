@@ -19,7 +19,7 @@ class Window():
         settings.WINDOW['size'] = (width, height)
         settings.WINDOW['aspect_ratio'] = width / height
         settings.WINDOW['title'] = title
-        settings.WINDOW['resizable'] = False
+        settings.WINDOW['resizable'] = True
         settings.WINDOW['vsync'] = True
 
         path = os.path.abspath(__file__)
@@ -64,6 +64,7 @@ class Window():
 
         self.FSProgram['numObjects'] = self.scene.getNumObjects()
         self.FSProgram['lightPosition'].value = (0.0, 50.0, 15.0)
+        #self.FSProgram['numSamples'].value = 5
 
         self.texture = self.ctx.texture([self.sceneArray.shape[1], self.sceneArray.shape[0]], 3,
                                         self.sceneArray.tobytes(), dtype='f4')
