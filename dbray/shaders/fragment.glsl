@@ -79,16 +79,13 @@ vec3 getTriangleNormal(vec3 hitPos, vec3 d0, vec3 d1, vec3 d2)
     return normalize(cross(d2-d0, d1-d0));
 }
 
-void castRay(in vec3 rayOrigin, in vec3 rayDirection, out float minDistance, out int objectHitIndex,
+void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, out float minDistance, out int objectHitIndex,
              out int closestGeometryType, out vec3 closestd0, out vec3 closestd1, out vec3 closestd2)
 {
     minDistance = 99999999.0;
     objectHitIndex = -1;
     closestGeometryType = -1;
-    //vec3 closestd0;
-    //vec3 closestd1;
-    //vec3 closestd2;
-    // These will hold the general properties of the nearest intersection
+
     vec3 d0;
     vec3 d1;
     vec3 d2;
@@ -108,6 +105,7 @@ void castRay(in vec3 rayOrigin, in vec3 rayDirection, out float minDistance, out
             closestd0 = d0;
             closestd1 = d1;
             closestd2 = d2;
+            if (earlyStop) i = numObjects;
         }
     }
 
@@ -123,7 +121,7 @@ void main() {
     vec3 closestd0;
     vec3 closestd1;
     vec3 closestd2;
-    castRay(cameraPosition, rayDirectionNorm, minDistance, objectHitIndex, closestGeometryType,
+    castRay(cameraPosition, rayDirectionNorm, false, minDistance, objectHitIndex, closestGeometryType,
             closestd0, closestd1, closestd2);
 
     if (objectHitIndex >= 0)
@@ -141,7 +139,7 @@ void main() {
 
         rayHit+=lightDir * 0.01;
         // Now we cast a ray to determine if the point is in shadow
-        castRay(rayHit, lightDir, minDistance, objectHitIndex, closestGeometryType,
+        castRay(rayHit, lightDir, true, minDistance, objectHitIndex, closestGeometryType,
                 closestd0, closestd1, closestd2);
 
         if (objectHitIndex < 0)
