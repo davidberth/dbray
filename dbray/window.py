@@ -65,7 +65,7 @@ class Window():
         self.cameraOrthoUpUniform.value = tuple(self.camera.orthoUp)
 
         self.FSProgram['numObjects'] = self.scene.getNumObjects()
-        self.FSProgram['lightPosition'].value = (0.0, 50.0, 15.0)
+        self.FSProgram['lightPosition'].value = (0.0, 50.0, 200.0)
         ysampInc =1.0 / self.height
         xsampInc = 1.0 / self.width
         samples = []
@@ -84,7 +84,7 @@ class Window():
 
     def render(self, time, frame_time):
 
-        self.FSProgram['lightPosition'].value = (math.cos(time) * 100.0, 100.0, -10.0 + math.sin(time) * 100.0)
+        self.FSProgram['lightPosition'].value = (math.cos(time) * 100.0, 100.0, 100.0)
 
         cameraChange = self.camera.frame()
 

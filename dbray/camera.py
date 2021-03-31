@@ -22,7 +22,7 @@ class Camera():
         self.moveUp = False
         self.moveDown = False
 
-        self.turnSpeed = 0.05
+        self.turnSpeed = 0.025
         self.tiltSpeed = 0.025
         self.moveSpeed = 0.5
 

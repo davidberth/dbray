@@ -10,6 +10,8 @@ uniform vec3 cameraRight;
 uniform vec3 cameraUp;
 uniform vec2 samples[4];
 
+//const int depth = 2;
+
 vec3 getBackColor(vec3 rayDirection) {
     float t = (-rayDirection.y + 0.5);
     return mix( vec3(0.0, 0.0, 1.0), vec3(1.0, 1.0, 1.0), t);
@@ -99,7 +101,7 @@ void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, out flo
         if (geomType == 2) distance = intersectSphere(i, rayOrigin, rayDirection, d0, d1);
         if (geomType == 3) distance = intersectTriangle(i, rayOrigin, rayDirection, d0, d1, d2);
 
-        if (distance > 0.5 && distance < minDistance)
+        if (distance > 0.0001 && distance < minDistance)
         {
             objectHitIndex = i;
             minDistance = distance;
@@ -122,6 +124,46 @@ vec3 getNormal(in int closestGeometryType, in vec3 location, in vec3 d0, in vec3
     return normal;
 }
 
+vec3 getColor(in int objectHitIndex, in int objectType, in vec3 rayHit, in vec3 rayDirection, in vec3 d0, in vec3 d1, in vec3 d2,
+            out vec3 normal)
+{
+
+    // get the normal of the surface
+    normal = getNormal(objectType, rayHit, d0, d1, d2);
+    vec3 lightDir = normalize(lightPosition - rayHit);
+    vec3 lightReflect = reflect(lightDir, normal);
+    float reflectDotEye = dot(lightReflect, rayDirection);
+    int sourceObjectIndex = objectHitIndex;
+    rayHit+=lightDir * 0.0001;
+    // Now we cast a ray to determine if the point is in shadow
+    bool inShadow = false;
+    float minDistance;
+    //int objectHitIndexShadow;
+    //int closestGeometryTypeShadow;
+    //castRay(rayHit, lightDir, true, minDistance, objectHitIndexShadow, closestGeometryTypeShadow,
+    //        d0, d1, d2);
+
+    //if (objectHitIndexShadow >= 0)
+    //    inShadow = true;
+
+    vec3 surfaceColor = vec3(texelFetch(Texture, ivec2(5, objectHitIndex), 0));
+    vec3 surfLighting = vec3(texelFetch(Texture, ivec2(6, objectHitIndex), 0));
+    float shininess = vec3(texelFetch(Texture, ivec2(7, objectHitIndex), 0)).x;
+    vec3 specular = vec3(0.0, 0.0, 0.0);
+    vec3 diffuse = vec3(0.0, 0.0, 0.0);
+    vec3 ambient = surfaceColor * surfLighting.x;
+    float lightDotNormal = dot(lightDir, normal);
+    if (lightDotNormal > 0 && !inShadow)
+    {
+        diffuse = surfaceColor * surfLighting.y * lightDotNormal;
+    }
+    if (reflectDotEye > 0 && !inShadow)
+    {
+        float factor = pow(reflectDotEye, shininess);
+        specular = vec3(1.0, 1.0, 1.0) * surfLighting.z * factor;
+    }
+    return ambient + diffuse + specular;
+}
 
 void main() {
     vec3 lcolor;
@@ -150,24 +192,29 @@ void main() {
         if (objectHitIndex >= 0)
         {
             vec3 rayHit = cameraPosition + minDistance * rayDirectionSamp;
-            lcolor = vec3(texelFetch(Texture, ivec2(5, objectHitIndex), 0));
-            // get the normal of the surface
-            vec3 normal = getNormal(closestGeometryType, rayHit, closestd0, closestd1, closestd2);
-            vec3 lightDir = normalize(lightPosition - rayHit);
+            vec3 normal;
+            lcolor = getColor(objectHitIndex, closestGeometryType, rayHit, rayDirectionSamp,
+                            closestd0, closestd1, closestd2, normal);
+            // Cast the reflection ray
 
-            rayHit+=lightDir * 0.01;
-            // Now we cast a ray to determine if the point is in shadow
-            castRay(rayHit, lightDir, true, minDistance, objectHitIndex, closestGeometryType,
-            closestd0, closestd1, closestd2);
+            vec3 reflectionDirection = reflect(rayDirectionSamp, normal);
+            //lcolor = reflectionDirection;
 
-            if (objectHitIndex < 0)
+            rayHit+= reflectionDirection * 0.001;
+
+            castRay(rayHit, reflectionDirection, false, minDistance, objectHitIndex, closestGeometryType,
+                    closestd0, closestd1, closestd2);
+            if (objectHitIndex > 0)
             {
-                lcolor = lcolor * max(dot(normal, lightDir), 0.05);
+                vec3 rayHitRef = rayHit + minDistance * reflectionDirection;
+                lcolor = lcolor + getColor(objectHitIndex, closestGeometryType, rayHitRef, reflectionDirection,
+                closestd0, closestd1, closestd2, normal) / 2.0;
             }
             else
             {
-                lcolor = vec3(0.05, 0.05, 0.05);
+                lcolor = lcolor + getBackColor(reflectionDirection);
             }
+
         }
         else
         {
@@ -175,8 +222,11 @@ void main() {
         }
 
         color+=lcolor;
+
+
+
     }
 
-    color/=float(numSamples);
+    color/=(float(numSamples));
     fragColor = vec4(color, 1.0);
 }
