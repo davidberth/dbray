@@ -16,3 +16,7 @@ class Plane():
     def toVector(self):
         return [[self.geometryType, 0.0, 0.0], [self.origin[0], self.origin[1], self.origin[2]],
                 [self.normal[0], self.normal[1], self.normal[2]], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
+
+    def getNumObjects(self):
+        return 1
+

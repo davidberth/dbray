@@ -10,3 +10,6 @@ class Triangle():
     def toVector(self):
         return [[self.geometryType, 0.0, 0.0], self.v0, self.v1,
                 self.v2, [0.0, 0.0, 0.0]]
+
+    def getNumObjects(self):
+        return 1

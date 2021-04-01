@@ -10,8 +10,6 @@ uniform vec3 cameraRight;
 uniform vec3 cameraUp;
 uniform vec2 samples[4];
 
-//const int depth = 2;
-
 vec3 getBackColor(vec3 rayDirection) {
     float t = (-rayDirection.y + 0.5);
     return mix( vec3(0.0, 0.0, 1.0), vec3(1.0, 1.0, 1.0), t);
@@ -138,13 +136,13 @@ vec3 getColor(in int objectHitIndex, in int objectType, in vec3 rayHit, in vec3 
     // Now we cast a ray to determine if the point is in shadow
     bool inShadow = false;
     float minDistance;
-    //int objectHitIndexShadow;
-    //int closestGeometryTypeShadow;
-    //castRay(rayHit, lightDir, true, minDistance, objectHitIndexShadow, closestGeometryTypeShadow,
-    //        d0, d1, d2);
+    int objectHitIndexShadow;
+    int closestGeometryTypeShadow;
+    castRay(rayHit, lightDir, true, minDistance, objectHitIndexShadow, closestGeometryTypeShadow,
+            d0, d1, d2);
 
-    //if (objectHitIndexShadow >= 0)
-    //    inShadow = true;
+    if (objectHitIndexShadow >= 0)
+        inShadow = true;
 
     vec3 surfaceColor = vec3(texelFetch(Texture, ivec2(5, objectHitIndex), 0));
     vec3 surfLighting = vec3(texelFetch(Texture, ivec2(6, objectHitIndex), 0));
@@ -198,7 +196,6 @@ void main() {
             // Cast the reflection ray
 
             vec3 reflectionDirection = reflect(rayDirectionSamp, normal);
-            //lcolor = reflectionDirection;
 
             rayHit+= reflectionDirection * 0.001;
 
@@ -207,12 +204,12 @@ void main() {
             if (objectHitIndex > 0)
             {
                 vec3 rayHitRef = rayHit + minDistance * reflectionDirection;
-                lcolor = lcolor + getColor(objectHitIndex, closestGeometryType, rayHitRef, reflectionDirection,
-                closestd0, closestd1, closestd2, normal) / 2.0;
+                lcolor = lcolor * .75 + getColor(objectHitIndex, closestGeometryType, rayHitRef, reflectionDirection,
+                closestd0, closestd1, closestd2, normal) * .25;
             }
             else
             {
-                lcolor = lcolor + getBackColor(reflectionDirection);
+                lcolor = lcolor * .75 + getBackColor(reflectionDirection) * .25;
             }
 
         }

@@ -2,6 +2,7 @@ from dbray import sphere
 from dbray import plane
 from dbray import triangle
 from dbray import material
+from dbray import extpolygon
 import numpy as np
 import random
 import math
@@ -19,14 +20,23 @@ class Scene:
         self.materials.append(pmaterial)
 
     def getNumObjects(self):
-        return len(self.objects)
+        numObjects = 0
+        for obj in self.objects:
+            numObjects+=obj.getNumObjects()
+        return numObjects
 
     def getMatrix(self):
         matrix = []
         for object, material in zip(self.objects, self.materials):
-            localValue = object.toVector()
-            localValue.extend(material.toVector())
-            matrix.append(localValue)
+            if object.geometryType < 4:
+                localValue = object.toVector()
+                localValue.extend(material.toVector())
+                matrix.append(localValue)
+            else:
+                for subobj in object.objects:
+                    localValue = subobj.toVector()
+                    localValue.extend(material.toVector())
+                    matrix.append(localValue)
         matrix = np.array(matrix, dtype=np.float32)
         return matrix
 
