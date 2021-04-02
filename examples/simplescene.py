@@ -9,7 +9,7 @@ import math
 import random
 import trimesh
 
-win = window.Window('DBray: Simple Example - David Berthiaume', 800, 800)
+win = window.Window('DBray: Simple Example - David Berthiaume', 1000, 1000)
 scene = scene.Scene()
 
 # Add some objects to the scene

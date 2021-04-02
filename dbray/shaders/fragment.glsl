@@ -10,6 +10,8 @@ uniform vec3 cameraRight;
 uniform vec3 cameraUp;
 uniform vec2 samples[4];
 
+const int depth = 3;
+
 vec3 getBackColor(vec3 rayDirection) {
     float t = (-rayDirection.y + 0.5);
     return mix( vec3(0.0, 0.0, 1.0), vec3(1.0, 1.0, 1.0), t);
@@ -165,6 +167,7 @@ vec3 getColor(in int objectHitIndex, in int objectType, in vec3 rayHit, in vec3 
 
 void main() {
     vec3 lcolor;
+    vec3 clcolor;
     vec3 color;
 
 
@@ -181,47 +184,54 @@ void main() {
     {
         // cast the main ray
         vec3 rayDestinationSamp = rayDestination + samples[samp][0] * cameraRight + samples[samp][1] * cameraUp;
-        vec3 rayDirectionSamp = normalize(rayDestinationSamp - cameraPosition);
+        vec3 rayDirection = normalize(rayDestinationSamp - cameraPosition);
+        vec3 rayOrigin = cameraPosition;
 
-        castRay(cameraPosition, rayDirectionSamp,
-                false, minDistance, objectHitIndex, closestGeometryType,
-        closestd0, closestd1, closestd2);
-
-        if (objectHitIndex >= 0)
+        for (int d = 0; d < depth; ++d)
         {
-            vec3 rayHit = cameraPosition + minDistance * rayDirectionSamp;
-            vec3 normal;
-            lcolor = getColor(objectHitIndex, closestGeometryType, rayHit, rayDirectionSamp,
-                            closestd0, closestd1, closestd2, normal);
-            // Cast the reflection ray
 
-            vec3 reflectionDirection = reflect(rayDirectionSamp, normal);
+            castRay(rayOrigin, rayDirection,
+            false, minDistance, objectHitIndex, closestGeometryType,
+            closestd0, closestd1, closestd2);
 
-            rayHit+= reflectionDirection * 0.001;
-
-            castRay(rayHit, reflectionDirection, false, minDistance, objectHitIndex, closestGeometryType,
-                    closestd0, closestd1, closestd2);
-            if (objectHitIndex > 0)
+            if (objectHitIndex >= 0)
             {
-                vec3 rayHitRef = rayHit + minDistance * reflectionDirection;
-                lcolor = lcolor * .75 + getColor(objectHitIndex, closestGeometryType, rayHitRef, reflectionDirection,
-                closestd0, closestd1, closestd2, normal) * .25;
+                vec3 rayHit = rayOrigin + minDistance * rayDirection;
+                vec3 normal;
+                clcolor = getColor(objectHitIndex, closestGeometryType, rayHit, rayDirection,
+                closestd0, closestd1, closestd2, normal);
+
+                if (d < depth - 1)
+                {
+                    rayDirection = reflect(rayDirection, normal);
+                    rayOrigin = rayHit + rayDirection * 0.001;
+                }
+
+                if (d > 0)
+                {
+                    lcolor = lcolor * .85 + clcolor * .15;
+                }
+                else
+                {
+                    lcolor = clcolor;
+                }
+
             }
             else
             {
-                lcolor = lcolor * .75 + getBackColor(reflectionDirection) * .25;
+                if (d==0)
+                {
+                    lcolor = getBackColor(rayDirection);
+                }
+                else
+                {
+                    lcolor = lcolor * .85 + getBackColor(rayDirection) * .15;
+                    d = depth;// exit the loop
+                }
             }
-
-        }
-        else
-        {
-            lcolor = getBackColor(rayDirectionSamp);
         }
 
         color+=lcolor;
-
-
-
     }
 
     color/=(float(numSamples));
