@@ -1,8 +1,10 @@
 from dbray import sphere
 from dbray import plane
 from dbray import triangle
+from dbray import aabb
 from dbray import material
 from dbray import extpolygon
+
 import numpy as np
 import random
 import math
@@ -15,7 +17,7 @@ class Scene:
         self.materials = []
 
     def addObject(self, object, pmaterial):
-        #print (f'adding object {object.toVector()} with material {pmaterial.toVector()}')
+        print (f'adding object {object.toVector()} with material {pmaterial.toVector()}')
         self.objects.append(object)
         self.materials.append(pmaterial)
 
@@ -28,7 +30,7 @@ class Scene:
     def getMatrix(self):
         matrix = []
         for object, material in zip(self.objects, self.materials):
-            if object.geometryType < 4:
+            if object.geometryType < 5:
                 localValue = object.toVector()
                 localValue.extend(material.toVector())
                 matrix.append(localValue)

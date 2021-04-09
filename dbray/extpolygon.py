@@ -7,7 +7,8 @@ class ExtrudedPolygon():
     def __init__(self, vertices, height):
         self.polygonVertices = vertices
         self.height = height
-        self.geometryType = 4
+        self.geometryType = 5
+        self.level = 0
 
         with pygmsh.geo.Geometry() as geom:
             poly = geom.add_polygon(
@@ -22,6 +23,9 @@ class ExtrudedPolygon():
         tpoints =  mesh.points
         for tri in tindices:
             self.objects.append(Triangle(tpoints[tri[0]], tpoints[tri[1]], tpoints[tri[2]]))
+
+    def setLevel(self, level):
+        self.level = level
 
     def getNumObjects(self):
         return len(self.objects)

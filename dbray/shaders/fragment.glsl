@@ -67,6 +67,55 @@ float intersectTriangle(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 v0, o
     return t;
 }
 
+float intersectAABB(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 vmin, out vec3 vmax) {
+    float tmin = -999999999.0, tmax = 999999999.0;
+
+    vmin = vec3(texelFetch(Texture, ivec2(1, i), 0));
+    vmax = vec3(texelFetch(Texture, ivec2(2, i), 0));
+
+    if (rayDirection.x != 0.0) {
+        float tx1 = (vmin.x - rayOrigin.x)/rayDirection.x;
+        float tx2 = (vmax.x - rayOrigin.x)/rayDirection.x;
+
+        tmin = max(tmin, min(tx1, tx2));
+        tmax = min(tmax, max(tx1, tx2));
+    }
+
+    if (rayDirection.y != 0.0) {
+        float tx1 = (vmin.y - rayOrigin.y)/rayDirection.y;
+        float tx2 = (vmax.y - rayOrigin.y)/rayDirection.y;
+
+        tmin = max(tmin, min(tx1, tx2));
+        tmax = min(tmax, max(tx1, tx2));
+    }
+
+    if (rayDirection.z != 0.0) {
+        float tx1 = (vmin.z - rayOrigin.z)/rayDirection.z;
+        float tx2 = (vmax.z - rayOrigin.z)/rayDirection.z;
+
+        tmin = max(tmin, min(tx1, tx2));
+        tmax = min(tmax, max(tx1, tx2));
+    }
+
+    if (tmax >= tmin)
+    {
+        if (tmin > 0.0)
+        {
+            return tmin;
+        }
+        else
+        {
+            return tmax;
+        }
+    }
+    else
+    {
+        return -1.0;
+    }
+
+}
+
+
 vec3 getPlaneNormal(vec3 hitPos, vec3 d0, vec3 d1)
 {
     return d1;
@@ -81,6 +130,11 @@ vec3 getSphereNormal(vec3 hitPos, vec3 d0, vec3 d1)
 vec3 getTriangleNormal(vec3 hitPos, vec3 d0, vec3 d1, vec3 d2)
 {
     return normalize(cross(d2-d0, d1-d0));
+}
+
+vec3 getAABBNormal(vec3 hitPos, vec3 d0, vec3 d1, vec3 d2)
+{
+    return vec3(0.0, 1.0, 0.0);
 }
 
 void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, out float minDistance, out int objectHitIndex,
@@ -100,6 +154,7 @@ void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, out flo
         if (geomType == 1) distance = intersectPlane(i, rayOrigin, rayDirection, d0, d1);
         if (geomType == 2) distance = intersectSphere(i, rayOrigin, rayDirection, d0, d1);
         if (geomType == 3) distance = intersectTriangle(i, rayOrigin, rayDirection, d0, d1, d2);
+        if (geomType == 4) distance = intersectAABB(i, rayOrigin, rayDirection, d0, d1);
 
         if (distance > 0.0001 && distance < minDistance)
         {
@@ -121,6 +176,7 @@ vec3 getNormal(in int closestGeometryType, in vec3 location, in vec3 d0, in vec3
     if (closestGeometryType == 1) normal = getPlaneNormal(location, d0, d1);
     if (closestGeometryType == 2) normal = getSphereNormal(location, d0, d1);
     if (closestGeometryType == 3) normal = getTriangleNormal(location, d0, d1, d2);
+    if (closestGeometryType == 4) normal = getAABBNormal(location, d0, d1, d2);
     return normal;
 }
 
@@ -147,6 +203,15 @@ vec3 getColor(in int objectHitIndex, in int objectType, in vec3 rayHit, in vec3 
         inShadow = true;
 
     vec3 surfaceColor = vec3(texelFetch(Texture, ivec2(5, objectHitIndex), 0));
+
+    if (objectType==1)
+    {
+        if (mod(int(rayHit.x / 3.0 + 1000) + int(rayHit.z / 3.0 + 1000), 2) == 0)
+        {
+            surfaceColor = vec3(0.1, 0.4, 0.0);
+        }
+    }
+
     vec3 surfLighting = vec3(texelFetch(Texture, ivec2(6, objectHitIndex), 0));
     float shininess = vec3(texelFetch(Texture, ivec2(7, objectHitIndex), 0)).x;
     vec3 specular = vec3(0.0, 0.0, 0.0);
