@@ -67,7 +67,7 @@ float intersectTriangle(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 v0, o
     return t;
 }
 
-float intersectAABB(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 vmin, out vec3 vmax) {
+int intersectAABB(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 vmin, out vec3 vmax) {
     float tmin = -999999999.0, tmax = 999999999.0;
 
     vmin = vec3(texelFetch(Texture, ivec2(1, i), 0));
@@ -99,22 +99,14 @@ float intersectAABB(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 vmin, out
 
     if (tmax >= tmin)
     {
-        if (tmin > 0.0)
-        {
-            return tmin;
-        }
-        else
-        {
-            return tmax;
-        }
+        return 1;
     }
     else
     {
-        return -1.0;
+        return 0;
     }
 
 }
-
 
 vec3 getPlaneNormal(vec3 hitPos, vec3 d0, vec3 d1)
 {
@@ -132,10 +124,7 @@ vec3 getTriangleNormal(vec3 hitPos, vec3 d0, vec3 d1, vec3 d2)
     return normalize(cross(d2-d0, d1-d0));
 }
 
-vec3 getAABBNormal(vec3 hitPos, vec3 d0, vec3 d1, vec3 d2)
-{
-    return vec3(0.0, 1.0, 0.0);
-}
+
 
 void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, out float minDistance, out int objectHitIndex,
              out int closestGeometryType, out vec3 closestd0, out vec3 closestd1, out vec3 closestd2)
@@ -143,28 +132,37 @@ void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, out flo
     minDistance = 99999999.0;
     objectHitIndex = -1;
     closestGeometryType = -1;
-
+    int parent = 0;
     vec3 d0;
     vec3 d1;
     vec3 d2;
     for(int i = 0; i < numObjects; i++)
     {
-        int geomType = int(texelFetch(Texture, ivec2(0, i), 0).x);
-        float distance = -1.0;
-        if (geomType == 1) distance = intersectPlane(i, rayOrigin, rayDirection, d0, d1);
-        if (geomType == 2) distance = intersectSphere(i, rayOrigin, rayDirection, d0, d1);
-        if (geomType == 3) distance = intersectTriangle(i, rayOrigin, rayDirection, d0, d1, d2);
-        if (geomType == 4) distance = intersectAABB(i, rayOrigin, rayDirection, d0, d1);
-
-        if (distance > 0.0001 && distance < minDistance)
+        vec4 geomInfo = texelFetch(Texture, ivec2(0, i), 0);
+        float level = geomInfo.y;
+        if (parent > 0 && level < 0.5)
         {
-            objectHitIndex = i;
-            minDistance = distance;
-            closestGeometryType = geomType;
-            closestd0 = d0;
-            closestd1 = d1;
-            closestd2 = d2;
-            if (earlyStop) i = numObjects;
+            parent = 0;
+        }
+        if (level < 0.5 || parent > 0)
+        {
+            int geomType = int(geomInfo.x);
+            float distance = -1.0;
+            if (geomType == 1) distance = intersectPlane(i, rayOrigin, rayDirection, d0, d1);
+            if (geomType == 2) distance = intersectSphere(i, rayOrigin, rayDirection, d0, d1);
+            if (geomType == 3) distance = intersectTriangle(i, rayOrigin, rayDirection, d0, d1, d2);
+            if (geomType == 4) parent = intersectAABB(i, rayOrigin, rayDirection, d0, d1);
+
+            if (distance > 0.0001 && distance < minDistance)
+            {
+                objectHitIndex = i;
+                minDistance = distance;
+                closestGeometryType = geomType;
+                closestd0 = d0;
+                closestd1 = d1;
+                closestd2 = d2;
+                if (earlyStop) i = numObjects;
+            }
         }
     }
 
@@ -176,7 +174,7 @@ vec3 getNormal(in int closestGeometryType, in vec3 location, in vec3 d0, in vec3
     if (closestGeometryType == 1) normal = getPlaneNormal(location, d0, d1);
     if (closestGeometryType == 2) normal = getSphereNormal(location, d0, d1);
     if (closestGeometryType == 3) normal = getTriangleNormal(location, d0, d1, d2);
-    if (closestGeometryType == 4) normal = getAABBNormal(location, d0, d1, d2);
+    //if (closestGeometryType == 4) normal = getAABBNormal(location, d0, d1, d2);
     return normal;
 }
 

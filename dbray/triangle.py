@@ -5,7 +5,7 @@ class Triangle():
         self.v1 = v1
         self.v2 = v2
         self.geometryType = 3
-        self.parent = 0
+        self.level = 0
 
     def setLevel(self, level):
         self.level = level

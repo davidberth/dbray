@@ -32,16 +32,16 @@ for i in range(10):
 scene.addObject(Plane([0.0, 0.0, 0.0], [0.0, 1.0, 0.0]), Material(2.0, 2.0, 2.0, 0.1, 0.4, 0.3, 60.0))
 #scene.addObject(Plane([0.0, 0.0, -20.0], [0.0, 0.0, 1.0]), Material(1.0, 1.0, 1.0, 0.01, 0.4, 0.3, 30.0))
 
-for i in range(40):
-    x = random.random() * 100.0 - 50.0
-    z = random.random() * 100.0 - 50.0
-    s = 20
+for i in range(0, 600, 6):
+    x = math.cos(i / 100.0) * 300.0
+    z = math.sin(i / 100.0) * 300.0
+    s = 10
     h = 20
-    scene.addObject(AABB([x, 0.0, z], [x+s, h, z+s]),
-                    Material(random.random(), random.random(), random.random(), 0.01, 0.4, 0.5, 190.0))
+    #scene.addObject(AABB([x, 0.0, z], [x+s, h, z+s]),
+    #                Material(random.random(), random.random(), random.random(), 0.01, 0.4, 0.5, 190.0))
 
-    #scene.addObject(ExtrudedPolygon([[x, 0.0, z], [x + s, 0.0, z], [x + s, 0.0, z + s], [x, 0.0, z + s]], h),
-    #            Material(random.random(), random.random(), random.random(), 0.01, 0.4, 0.5, 190.0))
+    scene.addObject(ExtrudedPolygon([[x, 0.0, z], [x + s, 0.0, z], [x + s, 0.0, z + s/2], [x, 0.0, z + s]], h),
+                Material(random.random(), random.random(), random.random(), 0.01, 0.4, 0.5, 190.0))
 
 #scene.addObject(AABB([0, 0.0, 0], [100, 100, 100]),
 #                    Material(random.random(), random.random(), random.random(), 0.01, 0.4, 0.5, 190.0))

@@ -17,7 +17,7 @@ class Scene:
         self.materials = []
 
     def addObject(self, object, pmaterial):
-        print (f'adding object {object.toVector()} with material {pmaterial.toVector()}')
+        #print (f'adding object {object.toVector()} with material {pmaterial.toVector()}')
         self.objects.append(object)
         self.materials.append(pmaterial)
 
@@ -35,6 +35,12 @@ class Scene:
                 localValue.extend(material.toVector())
                 matrix.append(localValue)
             else:
+                # First we add an AABB to encompass the composite object.
+                aabb = object.getAABB()
+                localValue = aabb.toVector()
+                # The material won't be used here.
+                localValue.extend(material.toVector())
+                matrix.append(localValue)
                 for subobj in object.objects:
                     localValue = subobj.toVector()
                     localValue.extend(material.toVector())
