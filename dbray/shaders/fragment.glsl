@@ -132,39 +132,38 @@ void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, out flo
     minDistance = 99999999.0;
     objectHitIndex = -1;
     closestGeometryType = -1;
-    int parent = 0;
+    int bound = 0;
     vec3 d0;
     vec3 d1;
     vec3 d2;
     for(int i = 0; i < numObjects; i++)
     {
         vec4 geomInfo = texelFetch(Texture, ivec2(0, i), 0);
-        float level = geomInfo.y;
-        if (parent > 0 && level < 0.5)
-        {
-            parent = 0;
-        }
-        if (level < 0.5 || parent > 0)
-        {
-            int geomType = int(geomInfo.x);
-            float distance = -1.0;
-            if (geomType == 1) distance = intersectPlane(i, rayOrigin, rayDirection, d0, d1);
-            if (geomType == 2) distance = intersectSphere(i, rayOrigin, rayDirection, d0, d1);
-            if (geomType == 3) distance = intersectTriangle(i, rayOrigin, rayDirection, d0, d1, d2);
-            if (geomType == 4) parent = intersectAABB(i, rayOrigin, rayDirection, d0, d1);
+        int level = int(geomInfo.y);
+        int geomType = int(geomInfo.x);
+        float distance = -1.0;
+        if (geomType == 1) distance = intersectPlane(i, rayOrigin, rayDirection, d0, d1);
+        if (geomType == 2) distance = intersectSphere(i, rayOrigin, rayDirection, d0, d1);
+        if (geomType == 3) distance = intersectTriangle(i, rayOrigin, rayDirection, d0, d1, d2);
+        if (geomType == 4) bound = intersectAABB(i, rayOrigin, rayDirection, d0, d1);
 
-            if (distance > 0.0001 && distance < minDistance)
-            {
-                objectHitIndex = i;
-                minDistance = distance;
-                closestGeometryType = geomType;
-                closestd0 = d0;
-                closestd1 = d1;
-                closestd2 = d2;
-                if (earlyStop) i = numObjects;
-            }
+        if (bound == 0 && geomType == 4)
+        {
+            i+=level;
+        }
+
+        if (geomType < 4 && distance > 0.0001 && distance < minDistance)
+        {
+            objectHitIndex = i;
+            minDistance = distance;
+            closestGeometryType = geomType;
+            closestd0 = d0;
+            closestd1 = d1;
+            closestd2 = d2;
+            if (earlyStop) i = numObjects;
         }
     }
+
 
 }
 

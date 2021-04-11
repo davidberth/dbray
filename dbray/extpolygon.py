@@ -24,7 +24,7 @@ class ExtrudedPolygon():
         tpoints =  mesh.points
         for tri in tindices:
             triangle = Triangle(tpoints[tri[0]], tpoints[tri[1]], tpoints[tri[2]])
-            triangle.setLevel(1)
+            #triangle.setLevel(1)
             self.objects.append(triangle)
 
         self.minvec = np.array([999999999.0, 999999999.0, 999999999.0])

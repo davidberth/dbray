@@ -37,6 +37,8 @@ class Scene:
             else:
                 # First we add an AABB to encompass the composite object.
                 aabb = object.getAABB()
+                # This defines how many objects to skip if the parent isn't collided with
+                aabb.setLevel(len(object.objects))
                 localValue = aabb.toVector()
                 # The material won't be used here.
                 localValue.extend(material.toVector())
