@@ -27,13 +27,27 @@ class Scene:
             numObjects+=obj.getNumObjects()
         return numObjects
 
+    def setMatrix(self, cy, cx, pad, matrix, localValue):
+        matrix[cy, cx:cx+len(localValue),:] = np.array(localValue)
+        cy+=1
+        if cy > 2047:
+            cy = 0
+            cx+=pad
+        return cy, cx
+
     def getMatrix(self):
-        matrix = []
+
+        matrix = np.zeros((2048, 2048, 3), dtype=np.float32)
+        cy = 0
+        cx = 0
+        pad = 10
+
         for object, material in zip(self.objects, self.materials):
             if object.geometryType < 5:
                 localValue = object.toVector()
                 localValue.extend(material.toVector())
-                matrix.append(localValue)
+                cy, cx = self.setMatrix(cy, cx, pad, matrix, localValue)
+
             else:
 
                 if object.geometryType == 5:
@@ -44,13 +58,13 @@ class Scene:
                     localValue = aabb.toVector()
                     # The material won't be used here.
                     localValue.extend(material.toVector())
-                    matrix.append(localValue)
+                    cy, cx = setMatrix(cy, cx, pad, matrix, localValue)
 
                 for subobj in object.objects:
                     localValue = subobj.toVector()
                     localValue.extend(material.toVector())
-                    matrix.append(localValue)
-        matrix = np.array(matrix, dtype=np.float32)
+                    cy, cx = self.setMatrix(cy, cx, pad, matrix, localValue)
+
         return matrix
 
 

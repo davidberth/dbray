@@ -10,25 +10,26 @@ uniform vec3 cameraRight;
 uniform vec3 cameraUp;
 uniform vec2 samples[4];
 
-const int depth = 1;
+const int depth = 3;
+const int pad = 10;
 
 vec3 getBackColor(vec3 rayDirection) {
     float t = (-rayDirection.y + 0.5);
     return mix( vec3(0.0, 0.0, 1.0), vec3(1.0, 1.0, 1.0), t);
 }
 
-float intersectPlane(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 planeOrigin, out vec3 planeNormal)
+float intersectPlane(int ty, int tx, vec3 rayOrigin, vec3 rayDirection, out vec3 planeOrigin, out vec3 planeNormal)
 {
-    planeOrigin = vec3(texelFetch(Texture, ivec2(1, i), 0));
-    planeNormal = vec3(texelFetch(Texture, ivec2(2, i), 0));
+    planeOrigin = vec3(texelFetch(Texture, ivec2(ty + 1, tx), 0));
+    planeNormal = vec3(texelFetch(Texture, ivec2(ty + 2, tx), 0));
     float t = dot(planeOrigin - rayOrigin, planeNormal) / dot(rayDirection, planeNormal);
     return t;
 }
 
-float intersectSphere(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 spherePosition, out vec3 sphereRadius)
+float intersectSphere(int ty, int tx, vec3 rayOrigin, vec3 rayDirection, out vec3 spherePosition, out vec3 sphereRadius)
 {
-    spherePosition = vec3(texelFetch(Texture, ivec2(1, i), 0));
-    float sphereRadiusFloat = texelFetch(Texture, ivec2(2, i), 0).x;
+    spherePosition = vec3(texelFetch(Texture, ivec2(ty + 1, tx), 0));
+    float sphereRadiusFloat = texelFetch(Texture, ivec2(ty + 2, tx), 0).x;
     sphereRadius = vec3(sphereRadiusFloat, 0.0, 0.0);
     vec3 oc = rayOrigin - spherePosition;
     float a = dot(rayDirection, rayDirection);
@@ -40,12 +41,12 @@ float intersectSphere(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 sphereP
     return t;
 }
 
-float intersectTriangle(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 v0, out vec3 v1, out vec3 v2)
+float intersectTriangle(int ty, int tx, vec3 rayOrigin, vec3 rayDirection, out vec3 v0, out vec3 v1, out vec3 v2)
 {
 
-    v0 = vec3(texelFetch(Texture, ivec2(1, i), 0));
-    v1 = vec3(texelFetch(Texture, ivec2(2, i), 0));
-    v2 = vec3(texelFetch(Texture, ivec2(3, i), 0));
+    v0 = vec3(texelFetch(Texture, ivec2(ty + 1, tx), 0));
+    v1 = vec3(texelFetch(Texture, ivec2(ty + 2, tx), 0));
+    v2 = vec3(texelFetch(Texture, ivec2(ty + 3, tx), 0));
     vec3 v0v1 = v1 - v0;
     vec3 v0v2 = v2 - v0;
 
@@ -69,11 +70,11 @@ float intersectTriangle(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 v0, o
 
 }
 
-int intersectAABB(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 vmin, out vec3 vmax) {
+int intersectAABB(int ty, int tx, vec3 rayOrigin, vec3 rayDirection, out vec3 vmin, out vec3 vmax) {
     float tmin = -999999999.0, tmax = 999999999.0;
 
-    vmin = vec3(texelFetch(Texture, ivec2(1, i), 0));
-    vmax = vec3(texelFetch(Texture, ivec2(2, i), 0));
+    vmin = vec3(texelFetch(Texture, ivec2(ty + 1, tx), 0));
+    vmax = vec3(texelFetch(Texture, ivec2(ty + 2, tx), 0));
 
     if (rayDirection.x != 0.0) {
         float tx1 = (vmin.x - rayOrigin.x)/rayDirection.x;
@@ -138,16 +139,20 @@ void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, out flo
     vec3 d0;
     vec3 d1;
     vec3 d2;
+    int tx;
+    int ty;
     for(int i = 0; i < numObjects; i++)
     {
-        vec4 geomInfo = texelFetch(Texture, ivec2(0, i), 0);
+        tx = i % 2048;
+        ty = int(i / 2048) * pad;
+        vec4 geomInfo = texelFetch(Texture, ivec2(ty, tx), 0);
         int level = int(geomInfo.y);
         int geomType = int(geomInfo.x);
         float distance = -1.0;
-        if (geomType == 1) distance = intersectPlane(i, rayOrigin, rayDirection, d0, d1);
-        if (geomType == 2) distance = intersectSphere(i, rayOrigin, rayDirection, d0, d1);
-        if (geomType == 3) distance = intersectTriangle(i, rayOrigin, rayDirection, d0, d1, d2);
-        if (geomType == 4) bound = intersectAABB(i, rayOrigin, rayDirection, d0, d1);
+        if (geomType == 1) distance = intersectPlane(ty, tx, rayOrigin, rayDirection, d0, d1);
+        if (geomType == 2) distance = intersectSphere(ty, tx, rayOrigin, rayDirection, d0, d1);
+        if (geomType == 3) distance = intersectTriangle(ty, tx, rayOrigin, rayDirection, d0, d1, d2);
+        if (geomType == 4) bound = intersectAABB(ty, tx, rayOrigin, rayDirection, d0, d1);
 
         if (bound == 0 && geomType == 4)
         {
@@ -175,7 +180,7 @@ vec3 getNormal(in int closestGeometryType, in vec3 location, in vec3 d0, in vec3
     if (closestGeometryType == 1) normal = getPlaneNormal(location, d0, d1);
     if (closestGeometryType == 2) normal = getSphereNormal(location, d0, d1);
     if (closestGeometryType == 3) normal = getTriangleNormal(location, d0, d1, d2);
-    //if (closestGeometryType == 4) normal = getAABBNormal(location, d0, d1, d2);
+
     return normal;
 }
 
@@ -201,7 +206,9 @@ vec3 getColor(in int objectHitIndex, in int objectType, in vec3 rayHit, in vec3 
     if (objectHitIndexShadow >= 0)
         inShadow = true;
 
-    vec3 surfaceColor = vec3(texelFetch(Texture, ivec2(5, objectHitIndex), 0));
+    int tx = objectHitIndex % 2048;
+    int ty = int(objectHitIndex / 2048) * pad;
+    vec3 surfaceColor = vec3(texelFetch(Texture, ivec2(ty + 5, tx), 0));
 
     if (objectType==1)
     {
@@ -211,8 +218,8 @@ vec3 getColor(in int objectHitIndex, in int objectType, in vec3 rayHit, in vec3 
         }
     }
 
-    vec3 surfLighting = vec3(texelFetch(Texture, ivec2(6, objectHitIndex), 0));
-    float shininess = vec3(texelFetch(Texture, ivec2(7, objectHitIndex), 0)).x;
+    vec3 surfLighting = vec3(texelFetch(Texture, ivec2(ty + 6, tx), 0));
+    float shininess = vec3(texelFetch(Texture, ivec2(ty + 7, tx), 0)).x;
     vec3 specular = vec3(0.0, 0.0, 0.0);
     vec3 diffuse = vec3(0.0, 0.0, 0.0);
     vec3 ambient = surfaceColor * surfLighting.x;

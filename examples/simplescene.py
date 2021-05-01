@@ -10,19 +10,18 @@ import random
 import numpy as np
 
 
-
 win = window.Window('DBray: Simple Example - David Berthiaume', 800,800)
 scene = scene.Scene()
 
 # Add some objects to the scene
 random.seed(42)
 
-tsizex, tsizey = 97, 97
+tsizex, tsizey = 257, 257
 heightField = np.zeros((tsizex, tsizey))
 
 for i in range(tsizex):
     for j in range(tsizey):
-        heightField[i,j] = i / 30.0
+        heightField[i,j] = i / 20.0
 
 scene.addObject(Terrain(heightField), Material(2.0, 2.0, 2.0, 0.1, 0.4, 0.3, 60.0))
 
