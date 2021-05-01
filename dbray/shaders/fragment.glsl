@@ -10,7 +10,7 @@ uniform vec3 cameraRight;
 uniform vec3 cameraUp;
 uniform vec2 samples[4];
 
-const int depth = 3;
+const int depth = 1;
 
 vec3 getBackColor(vec3 rayDirection) {
     float t = (-rayDirection.y + 0.5);
@@ -42,6 +42,7 @@ float intersectSphere(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 sphereP
 
 float intersectTriangle(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 v0, out vec3 v1, out vec3 v2)
 {
+
     v0 = vec3(texelFetch(Texture, ivec2(1, i), 0));
     v1 = vec3(texelFetch(Texture, ivec2(2, i), 0));
     v2 = vec3(texelFetch(Texture, ivec2(3, i), 0));
@@ -65,6 +66,7 @@ float intersectTriangle(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 v0, o
     float t = dot(v0v2, qvec) * invDet;
 
     return t;
+
 }
 
 int intersectAABB(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 vmin, out vec3 vmax) {
@@ -97,7 +99,7 @@ int intersectAABB(int i, vec3 rayOrigin, vec3 rayDirection, out vec3 vmin, out v
         tmax = min(tmax, max(tx1, tx2));
     }
 
-    if (tmax >= tmin)
+    if ((tmax >= tmin) && (min(tmin, tmax) > 0.0))
     {
         return 1;
     }

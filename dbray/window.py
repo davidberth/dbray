@@ -20,7 +20,7 @@ class Window():
         settings.WINDOW['aspect_ratio'] = width / height
         settings.WINDOW['title'] = title
         settings.WINDOW['resizable'] = True
-        settings.WINDOW['vsync'] = True
+        settings.WINDOW['vsync'] = False
 
         path = os.path.abspath(__file__)
         dirPath = os.path.dirname(os.path.dirname(path))
@@ -31,9 +31,11 @@ class Window():
         self.wnd.key_event_func = self.key_event
         self.wnd.mouse_press_event_func = self.mouse_press_event
         self.wnd.mouse_release_event_func = self.mouse_release_event
-        self.wnd.position = (3640 - self.wnd.size[0]) // 2, (1440 - self.wnd.size[1]) // 2
+        self.wnd.position = (1640 - self.wnd.size[0]) // 2, (1140 - self.wnd.size[1]) // 2
         self.height = height
         self.width = width
+        self.frames = 0
+        self.oldTime = 0
 
         self.wnd.set_icon('resources/icon.png')
         self.camera = camera.Camera(self.wnd.keys)
@@ -97,6 +99,12 @@ class Window():
 
         self.texture.use(location=0)
         self.quad_fs.render(self.FSProgram)
+
+        if time - self.oldTime > 1:
+            self.oldTime = time
+            print (self.frames)
+            self.frames = 0
+        self.frames+=1
 
     def reloadShaders(self):
         self.initGL()
