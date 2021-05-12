@@ -17,11 +17,12 @@ scene = scene.Scene()
 random.seed(42)
 
 tsizex, tsizey = 257, 257
-heightField = np.zeros((tsizex, tsizey))
+heightField  = 2.0 * np.random.random((tsizex, tsizey))
+#heightField = np.zeros((tsizex, tsizey))
 
-for i in range(tsizex):
-    for j in range(tsizey):
-        heightField[i,j] = i / 20.0
+#for i in range(tsizex):
+#    for j in range(tsizey):
+#        heightField[i,j] = np.random.random((tsizex, tsizey))
 
 scene.addObject(Terrain(heightField), Material(2.0, 2.0, 2.0, 0.1, 0.4, 0.3, 60.0))
 

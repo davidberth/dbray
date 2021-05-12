@@ -20,7 +20,7 @@ class Window():
         settings.WINDOW['aspect_ratio'] = width / height
         settings.WINDOW['title'] = title
         settings.WINDOW['resizable'] = True
-        settings.WINDOW['vsync'] = False
+        settings.WINDOW['vsync'] = True
 
         path = os.path.abspath(__file__)
         dirPath = os.path.dirname(os.path.dirname(path))
@@ -67,7 +67,7 @@ class Window():
         self.cameraOrthoUpUniform.value = tuple(self.camera.orthoUp)
 
         self.FSProgram['numObjects'] = self.scene.getNumObjects()
-        self.FSProgram['lightPosition'].value = (0.0, 50.0, 200.0)
+        self.FSProgram['lightPosition'].value = (0.0, 120.0, 200.0)
         self.FSProgram['projScale'].value = 1.5
         ysampInc =1.0 / self.height
         xsampInc = 1.0 / self.width
@@ -87,7 +87,7 @@ class Window():
 
     def render(self, time, frame_time):
 
-        self.FSProgram['lightPosition'].value = (math.cos(time) * 100.0, 100.0, 100.0)
+        self.FSProgram['lightPosition'].value = (math.cos(time) * 4000.0, 4980.0, math.sin(time) * 4000.0)
 
         cameraChange = self.camera.frame()
 
@@ -102,7 +102,7 @@ class Window():
 
         if time - self.oldTime > 1:
             self.oldTime = time
-            print (self.frames)
+            print (self.frames, self.camera.location)
             self.frames = 0
         self.frames+=1
 

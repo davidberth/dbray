@@ -24,7 +24,7 @@ class Camera():
 
         self.turnSpeed = 0.025
         self.tiltSpeed = 0.025
-        self.moveSpeed = 0.5
+        self.moveSpeed = 10.0
 
         self.twopi = math.pi * 2.0
 

@@ -129,10 +129,10 @@ vec3 getTriangleNormal(vec3 hitPos, vec3 d0, vec3 d1, vec3 d2)
 
 
 
-void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, out float minDistance, out int objectHitIndex,
+void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, in float minDistanceMax, out float minDistance, out int objectHitIndex,
              out int closestGeometryType, out vec3 closestd0, out vec3 closestd1, out vec3 closestd2)
 {
-    minDistance = 99999999.0;
+    minDistance = minDistanceMax;
     objectHitIndex = -1;
     closestGeometryType = -1;
     int bound = 0;
@@ -200,7 +200,8 @@ vec3 getColor(in int objectHitIndex, in int objectType, in vec3 rayHit, in vec3 
     float minDistance;
     int objectHitIndexShadow;
     int closestGeometryTypeShadow;
-    castRay(rayHit, lightDir, true, minDistance, objectHitIndexShadow, closestGeometryTypeShadow,
+    float minDistanceMax = distance(rayHit, lightPosition);
+    castRay(rayHit, lightDir, true, minDistanceMax, minDistance, objectHitIndexShadow, closestGeometryTypeShadow,
             d0, d1, d2);
 
     if (objectHitIndexShadow >= 0)
@@ -262,7 +263,7 @@ void main() {
         {
 
             castRay(rayOrigin, rayDirection,
-            false, minDistance, objectHitIndex, closestGeometryType,
+            false, 999999999.0, minDistance, objectHitIndex, closestGeometryType,
             closestd0, closestd1, closestd2);
 
             if (objectHitIndex >= 0)
