@@ -24,20 +24,20 @@ heightField  = 2.0 * np.random.random((tsizex, tsizey))
 #    for j in range(tsizey):
 #        heightField[i,j] = np.random.random((tsizex, tsizey))
 
-scene.addObject(Terrain(heightField), Material(2.0, 2.0, 2.0, 0.1, 0.4, 0.3, 60.0))
+#scene.addObject(Terrain(heightField), Material(2.0, 2.0, 2.0, 0.1, 0.4, 0.3, 60.0))
 
 scene.addObject(Plane([0.0, -1.0, 0.0], [0.0, 1.0, 0.0]), Material(2.0, 2.0, 2.0, 0.1, 0.4, 0.3, 60.0))
 
-#for i in range(0, 600, 5):
-#    x = math.cos(i / 100.0) * 50.0
-#    z = math.sin(i / 100.0) * 50.0
-#    s = 5
-#    h = 20
+for i in range(0, 600, 5):
+    x = math.cos(i / 100.0) * 50.0
+    z = math.sin(i / 100.0) * 50.0
+    s = 5
+    h = 20
     #scene.addObject(AABB([x, 0.0, z], [x+s, h, z+s]),
     #                Material(random.random(), random.random(), random.random(), 0.01, 0.4, 0.5, 190.0))
 
-    #scene.addObject(ExtrudedPolygon([[x, 0.0, z], [x + s, 0.0, z], [x + s, 0.0, z + s/4], [x, 0.0, z + s]], h),
-    #            Material(random.random(), random.random(), random.random(), 0.01, 0.4, 0.5, 190.0))
+    scene.addObject(ExtrudedPolygon([[x, 0.0, z], [x + s, 0.0, z], [x + s, 0.0, z + s/4], [x, 0.0, z + s]], h),
+                Material(random.random(), random.random(), random.random(), 0.01, 0.4, 0.5, 190.0))
 
 #scene.addObject(AABB([0, 0.0, 0], [100, 100, 100]),
 #                    Material(random.random(), random.random(), random.random(), 0.01, 0.4, 0.5, 190.0))

@@ -1,6 +1,8 @@
 from dbray.triangle import Triangle
 from dbray.aabb import AABB
 import numpy as np
+from scipy import ndimage
+import matplotlib.pyplot as plt
 # This is a compound geometry type
 class Terrain():
 
@@ -14,9 +16,28 @@ class Terrain():
         self.offsetx = offsetx
         self.offsety = offsety
 
+        self.normalField = self.getNormalField(heightField)
+
+
+
         self.quadtree(0, heightField.shape[0]-1, 0, heightField.shape[1]-1, heightField, 0, 0, self.objects)
         self.minvec = [0, np.min(heightField), 0]
         self.maxvec = [heightField.shape[0], np.max(heightField), heightField.shape[1]]
+
+    def getNormalField(self, heightField):
+        dx = -ndimage.sobel(heightField, 0) / self.scalex # horizontal derivative
+        dz = -ndimage.sobel(heightField, 1) / self.scaley # vertical derivative
+        dy = np.ones_like(dx)
+
+        # now we place this into a single array
+        normalMap = np.dstack([dx, dy, dz])
+        mags = np.sqrt((normalMap * normalMap).sum(axis=2))
+        normalMap[:, :, 0] /= mags
+        normalMap[:, :, 1] /= mags
+        normalMap[:, :, 2] /= mags
+
+        return normalMap
+
 
     def quadtree(self, xmin, xmax, ymin, ymax, heightField, level, triangles, objects):
 
@@ -56,7 +77,7 @@ class Terrain():
                         v2 = [xx + scalex, heightField[x + 1, y], yy]
                         v3 = [xx, heightField[x, y + 1], yy + scaley]
 
-                        triangle = Triangle(v1, v2, v3)
+                        triangle = Triangle(v1, v2, v3, self.normalField[x,y], self.normalField[x +1,y], self.normalField[x,y+1])
                         objects.append(triangle)
                         localLevel+=1
                         localTriangles+=1
@@ -68,7 +89,7 @@ class Terrain():
                         v2 = [xx + scalex, heightField[x + 1, y + 1], yy + scaley]
                         v3 = [xx, heightField[x, y + 1], yy + scaley]
 
-                        triangle = Triangle(v1, v2, v3)
+                        triangle = Triangle(v1, v2, v3, self.normalField[x+1,y], self.normalField[x+1,y+1], self.normalField[x,y+1])
                         objects.append(triangle)
                         localLevel+=1
                         localTriangles+1

@@ -18,7 +18,7 @@ class Sphere():
 
     def toVector(self):
         return [[self.geometryType, self.level, 0.0], [self.center[0], self.center[1], self.center[2]], [self.radius, 0.0, 0.0],
-                [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
+                [0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0],[0.0, 0.0, 0.0]]
 
     def getNumObjects(self):
         return 1

@@ -10,7 +10,7 @@ uniform vec3 cameraRight;
 uniform vec3 cameraUp;
 uniform vec2 samples[4];
 
-const int depth = 3;
+const int depth = 1;
 const int pad = 10;
 
 vec3 getBackColor(vec3 rayDirection) {
@@ -100,7 +100,7 @@ int intersectAABB(int ty, int tx, vec3 rayOrigin, vec3 rayDirection, out vec3 vm
         tmax = min(tmax, max(tx1, tx2));
     }
 
-    if ((tmax >= tmin) && (min(tmin, tmax) > 0.0))
+    if ((tmax >= tmin) && (max(tmin, tmax) > 0.0))
     {
         return 1;
     }
@@ -122,15 +122,34 @@ vec3 getSphereNormal(vec3 hitPos, vec3 d0, vec3 d1)
     return normalize(outVec);
 }
 
-vec3 getTriangleNormal(vec3 hitPos, vec3 d0, vec3 d1, vec3 d2)
+vec3 getTriangleNormal(vec3 hitPos, int tx, int ty, vec3 d0, vec3 d1, vec3 d2)
 {
-    return normalize(cross(d2-d0, d1-d0));
+    vec3 n0 = vec3(texelFetch(Texture, ivec2(ty + 4, tx), 0));
+    vec3 n1 = vec3(texelFetch(Texture, ivec2(ty + 5, tx), 0));
+    vec3 n2 = vec3(texelFetch(Texture, ivec2(ty + 6, tx), 0));
+
+    vec3 v0 = d1 - d0;
+    vec3 v1 = d2 - d0;
+    vec3 v2 = hitPos - d0;
+    float d00 = dot(v0, v0);
+    float d01 = dot(v0, v1);
+    float d11 = dot(v1, v1);
+    float d20 = dot(v2, v0);
+    float d21 = dot(v2, v1);
+    float denom = d00 * d11 - d01 * d01;
+    float b = (d11 * d20 - d01 * d21) / denom;
+    float c = (d00 * d21 - d01 * d20) / denom;
+    float a = 1.0f - b - c;
+
+    // Interpolate the normals using barycentric coordinates.
+    return a * n0 + b * n1 + c * n2;
+    //return vec3(a,b,c);
 }
 
 
 
 void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, in float minDistanceMax, out float minDistance, out int objectHitIndex,
-             out int closestGeometryType, out vec3 closestd0, out vec3 closestd1, out vec3 closestd2)
+             out int closestGeometryType, out vec3 closestd0, out vec3 closestd1, out vec3 closestd2, out vec3 closestd3)
 {
     minDistance = minDistanceMax;
     objectHitIndex = -1;
@@ -139,6 +158,7 @@ void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, in floa
     vec3 d0;
     vec3 d1;
     vec3 d2;
+    vec3 d3;
     int tx;
     int ty;
     for(int i = 0; i < numObjects; i++)
@@ -167,6 +187,7 @@ void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, in floa
             closestd0 = d0;
             closestd1 = d1;
             closestd2 = d2;
+            closestd3 = d3;
             if (earlyStop) i = numObjects;
         }
     }
@@ -174,27 +195,30 @@ void castRay(in vec3 rayOrigin, in vec3 rayDirection, in bool earlyStop, in floa
 
 }
 
-vec3 getNormal(in int closestGeometryType, in vec3 location, in vec3 d0, in vec3 d1, in vec3 d2)
+vec3 getNormal(in int closestGeometryType, in int tx, in int ty, in vec3 location, in vec3 d0, in vec3 d1, in vec3 d2,
+                in vec3 d3)
 {
     vec3 normal;
     if (closestGeometryType == 1) normal = getPlaneNormal(location, d0, d1);
     if (closestGeometryType == 2) normal = getSphereNormal(location, d0, d1);
-    if (closestGeometryType == 3) normal = getTriangleNormal(location, d0, d1, d2);
+    if (closestGeometryType == 3) normal = getTriangleNormal(location, tx, ty, d0, d1, d2);
 
     return normal;
 }
 
-vec3 getColor(in int objectHitIndex, in int objectType, in vec3 rayHit, in vec3 rayDirection, in vec3 d0, in vec3 d1, in vec3 d2,
-            out vec3 normal)
+vec3 getColor(in int objectHitIndex, in int objectType, in vec3 rayHit, in vec3 rayDirection, in vec3 d0, in vec3 d1,
+    in vec3 d2, in vec3 d3, out vec3 normal)
 {
 
     // get the normal of the surface
-    normal = getNormal(objectType, rayHit, d0, d1, d2);
+    int tx = objectHitIndex % 2048;
+    int ty = int(objectHitIndex / 2048) * pad;
+    normal = getNormal(objectType, tx, ty, rayHit, d0, d1, d2, d3);
     vec3 lightDir = normalize(lightPosition - rayHit);
     vec3 lightReflect = reflect(lightDir, normal);
     float reflectDotEye = dot(lightReflect, rayDirection);
     int sourceObjectIndex = objectHitIndex;
-    rayHit+=lightDir * 0.0001;
+    rayHit+=lightDir * 0.01;
     // Now we cast a ray to determine if the point is in shadow
     bool inShadow = false;
     float minDistance;
@@ -202,14 +226,13 @@ vec3 getColor(in int objectHitIndex, in int objectType, in vec3 rayHit, in vec3 
     int closestGeometryTypeShadow;
     float minDistanceMax = distance(rayHit, lightPosition);
     castRay(rayHit, lightDir, true, minDistanceMax, minDistance, objectHitIndexShadow, closestGeometryTypeShadow,
-            d0, d1, d2);
+            d0, d1, d2, d3);
 
     if (objectHitIndexShadow >= 0)
         inShadow = true;
 
-    int tx = objectHitIndex % 2048;
-    int ty = int(objectHitIndex / 2048) * pad;
-    vec3 surfaceColor = vec3(texelFetch(Texture, ivec2(ty + 5, tx), 0));
+
+    vec3 surfaceColor = vec3(texelFetch(Texture, ivec2(ty + 7, tx), 0));
 
     if (objectType==1)
     {
@@ -219,8 +242,8 @@ vec3 getColor(in int objectHitIndex, in int objectType, in vec3 rayHit, in vec3 
         }
     }
 
-    vec3 surfLighting = vec3(texelFetch(Texture, ivec2(ty + 6, tx), 0));
-    float shininess = vec3(texelFetch(Texture, ivec2(ty + 7, tx), 0)).x;
+    vec3 surfLighting = vec3(texelFetch(Texture, ivec2(ty + 8, tx), 0));
+    float shininess = vec3(texelFetch(Texture, ivec2(ty + 9, tx), 0)).x;
     vec3 specular = vec3(0.0, 0.0, 0.0);
     vec3 diffuse = vec3(0.0, 0.0, 0.0);
     vec3 ambient = surfaceColor * surfLighting.x;
@@ -249,6 +272,7 @@ void main() {
     vec3 closestd0;
     vec3 closestd1;
     vec3 closestd2;
+    vec3 closestd3;
     int numSamples = samples.length();
 
     color = vec3(0.0, 0.0, 0.0);
@@ -264,19 +288,19 @@ void main() {
 
             castRay(rayOrigin, rayDirection,
             false, 999999999.0, minDistance, objectHitIndex, closestGeometryType,
-            closestd0, closestd1, closestd2);
+            closestd0, closestd1, closestd2, closestd3);
 
             if (objectHitIndex >= 0)
             {
                 vec3 rayHit = rayOrigin + minDistance * rayDirection;
                 vec3 normal;
                 clcolor = getColor(objectHitIndex, closestGeometryType, rayHit, rayDirection,
-                closestd0, closestd1, closestd2, normal);
+                closestd0, closestd1, closestd2, closestd3, normal);
 
                 if (d < depth - 1)
                 {
                     rayDirection = reflect(rayDirection, normal);
-                    rayOrigin = rayHit + rayDirection * 0.001;
+                    rayOrigin = rayHit + rayDirection * 0.01;
                 }
 
                 if (d > 0)

@@ -8,7 +8,7 @@ class AABB():
 
     def toVector(self):
         return [[self.geometryType, self.level, 0.0], self.vmin, self.vmax,
-                [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
+                [0.0, 0.0, 0.0], [0.0, 0.0, 0.0],[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
 
     def setLevel(self, level):
         self.level = level
