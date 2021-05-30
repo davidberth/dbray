@@ -130,12 +130,12 @@ class Camera():
                     self.yaw -= self.twopi
             if self.tiltUp:
                 self.pitch += self.tiltSpeed
-                if self.pitch > math.pi - 0.01:
-                    self.pitch = math.pi - 0.01
+                if self.pitch > math.pi/2.0 - 0.01:
+                    self.pitch = math.pi/2.0 - 0.01
             if self.tiltDown:
                 self.pitch -= self.tiltSpeed
-                if self.pitch < -math.pi + 0.01:
-                    self.pitch = -math.pi + 0.01
+                if self.pitch < -math.pi/2.0 + 0.01:
+                    self.pitch = -math.pi/2.0 + 0.01
 
             self.getOrthonormal()
         return cameraMoving

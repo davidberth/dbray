@@ -3,10 +3,11 @@ from dbray.aabb import AABB
 import numpy as np
 from scipy import ndimage
 import matplotlib.pyplot as plt
+from scipy.ndimage import gaussian_filter
 # This is a compound geometry type
 class Terrain():
 
-    def __init__(self, heightField, scalex, scaley, offsetx, offsety):
+    def __init__(self, heightField, scalex, scaley, offsetx, offsety, xmin, ymin):
         self.heightField = heightField
         self.geometryType = 6
         self.level = 0
@@ -15,18 +16,52 @@ class Terrain():
         self.scaley = scaley
         self.offsetx = offsetx
         self.offsety = offsety
+        self.cellsx, self.cellsy = heightField.shape
+
+        # This is used to place items on the Terrain using real-world coordinates
+        # TODO how to structure this cleanly?
+        # These are the values that you add to place an object in world coordinates from real coordinates.
+        # renderX = realX + realOffsetX...
+        self.realOffsetx = -xmin
+        self.realOffsety = -ymin
 
         self.normalField = self.getNormalField(heightField)
-
-
 
         self.quadtree(0, heightField.shape[0]-1, 0, heightField.shape[1]-1, heightField, 0, 0, self.objects)
         self.minvec = [0, np.min(heightField), 0]
         self.maxvec = [heightField.shape[0], np.max(heightField), heightField.shape[1]]
 
+    def getRenderCoordinates(self, x, y):
+        # Get the terrain cell coordinates
+        # Get the render coordinates
+        rx = x + self.realOffsetx
+        ry = y + self.realOffsety
+
+        # Get the terrain cell coordinates.
+        tx = int((rx - self.offsetx) / self.scalex)
+        ty = int((ry - self.offsety) / self.scaley)
+
+        height = self.getHeight(tx,ty)
+
+        return x + self.realOffsetx, height, y + self.realOffsety
+
+    def getHeight(self, tx, ty):
+        if tx < 0:
+            tx = 0
+        if tx > self.cellsx:
+            tx = self.cellsx - 1
+
+        if ty < 0:
+            ty = 0
+        if ty > self.cellsy:
+            ty = self.cellsy - 1
+        return self.heightField[tx, ty]
+
     def getNormalField(self, heightField):
-        dx = -ndimage.sobel(heightField, 0) / self.scalex # horizontal derivative
-        dz = -ndimage.sobel(heightField, 1) / self.scaley # vertical derivative
+
+        smooth = gaussian_filter(heightField, sigma=2)
+        dx = -ndimage.sobel(smooth, 0) / self.scalex # horizontal derivative
+        dz = -ndimage.sobel(smooth, 1) / self.scaley # vertical derivative
         dy = np.ones_like(dx)
 
         # now we place this into a single array

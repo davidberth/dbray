@@ -69,6 +69,7 @@ class Window():
         self.FSProgram['numObjects'] = self.scene.getNumObjects()
         self.FSProgram['lightPosition'].value = (0.0, 120.0, 200.0)
         self.FSProgram['projScale'].value = 1.5
+        self.FSProgram['aspectRatio'] = self.width / self.height
         ysampInc =1.0 / self.height
         xsampInc = 1.0 / self.width
         samples = []
